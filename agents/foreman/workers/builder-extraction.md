@@ -1,6 +1,6 @@
 # builder-extraction
 
-Read `_builder-base.md` (same folder) first and follow it. Also read `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `.agentthon/artifacts/domain-brief.md`.
+Read `_builder-base.md` (same folder) first and follow it. Also read `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `.agentthon/artifacts/domain.md` → Rules (older projects: `domain-brief.md` + `domain-checklist.md`).
 
 **Your area:** turning unstructured or semi-structured input into structured records defined in `contracts/` — readers, normalisation, rule/pattern extraction, NLP pipelines, merging.
 

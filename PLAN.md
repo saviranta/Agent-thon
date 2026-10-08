@@ -139,7 +139,7 @@ Combined reviewer (pro) runs checklists in order code → security → domain �
 **Architect**
 - Starts every project with **Brief & Challenge** (session 0, §4a).
 - Decides with the team: stack, libraries, data handling, deploy target — and records the reasoning in `architecture.md`. Fills `config.checks` and `config.deploy`.
-- Writes per-project domain artifacts: `domain-brief.md` (data, rules, constraints) and `domain-checklist.md` (used by the domain reviewer).
+- Writes per-project domain artifacts: `domain.md` with Rules (data, rules, constraints) and Checklist (used by the domain reviewer).
 - Maintains `ownership.yml` with the team (§5) and regenerates CODEOWNERS.
 - Library discovery with GitHits MCP (search, working examples, package info, vulnerabilities, dependency weight) + own knowledge; decisions logged in `architecture.md` → Library decisions with exact versions.
 - Sub-agents: task-decomposer, graph-checker (file overlaps, deps, every impl task has tests, every UI task references a wireframe, **every `owns_files` path is agent-owned in ownership.yml**).
@@ -205,7 +205,7 @@ Combined reviewer (pro) runs checklists in order code → security → domain �
 |---|---|---|
 | code | every task | toolkit: correctness, conventions, contract compliance |
 | security | backend/file/LLM tasks | toolkit: input handling, secrets, prompt injection from user-supplied content, sensitive data in logs |
-| domain | tasks tagged `domain` / `extraction` / `ai` | **project's `domain-checklist.md`** written by Architect |
+| domain | tasks tagged `domain` / `extraction` / `ai` | **project's `domain.md` → Checklist** written by Architect |
 | ui | UI tasks | toolkit: wireframe + tokens, a11y basics, empty/error/loading states |
 
 **Testers** (Sonnet)
@@ -472,3 +472,4 @@ GitHub: toolkit is a local git repo; a private GitHub repo is created after Phas
 | Runtime LLMs | app's own concern; provider-agnostic adapter; outside Agent-thon |
 | Eval | hard failures auto-block; scores → human decision on the wave PR |
 | Project scoping | toolkit global; per-project `.agentthon/`; one Foreman per project |
+| Architect speed | specs capped ~60 lines / 3,500 chars and point to contracts/context packs (check-wave warns); wave.json is an index; >5 tasks → Architect writes wave.json, 2–3 spec writers in parallel, agreeing on interfaces through each task's `provides` line; one `domain.md` (Rules + Checklist); context packs ≤60 lines, only for areas the next wave needs; replies ≤10 lines by default |

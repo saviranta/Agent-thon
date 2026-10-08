@@ -18,6 +18,9 @@ BUILDERS = {"builder-infra", "builder-api", "builder-extraction", "builder-ai-in
 TAGS = {"api", "extraction", "ai", "domain", "ui", "infra", "security"}
 SIZES = {"S", "M"}
 MAX_FILES = 4
+MAX_SPEC_LINES = 60      # specs point to contracts/context packs instead of copying them
+MAX_SPEC_CHARS = 3500
+MAX_TASK_ENTRY_CHARS = 900  # wave.json is an index, not prose
 
 
 def load_wave(project, n):
@@ -117,6 +120,11 @@ def main():
         if tid in ancestors(tasks, tid):
             err(f"{p} dependency cycle")
 
+        if any(tid in o.get("depends_on", []) for o in tasks.values()) and not t.get("provides"):
+            warn(f"{p} other tasks depend on it but it has no 'provides' (the interface they use)")
+        if len(json.dumps(t)) > MAX_TASK_ENTRY_CHARS:
+            warn(f"{p} wave.json entry is {len(json.dumps(t))} chars (cap {MAX_TASK_ENTRY_CHARS}) — keep detail in the spec")
+
         spec_rel = t.get("spec_file", "")
         spec = os.path.join(agentthon, spec_rel)
         if not spec_rel or not os.path.exists(spec):
@@ -130,6 +138,10 @@ def main():
                 err(f"{p} spec has no unit tests listed")
             if not re.search(r"^## Acceptance criteria", text, re.M):
                 err(f"{p} spec has no acceptance criteria")
+            nlines, nchars = text.count("\n") + 1, len(text)
+            if nlines > MAX_SPEC_LINES or nchars > MAX_SPEC_CHARS:
+                warn(f"{p} spec is {nlines} lines / {nchars} chars (cap {MAX_SPEC_LINES} / {MAX_SPEC_CHARS}) "
+                     "— point to contracts/context packs instead of copying them")
             for f in files:
                 if f not in text:
                     warn(f"{p} owned file {f} is not mentioned in the spec")

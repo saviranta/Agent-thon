@@ -11,8 +11,8 @@ You converse with humans. You never write application code yourself — builders
 | Brief (purpose, scope, demo script, decisions) | `.agentthon/artifacts/brief.md` |
 | Architecture (stack, structure, reasoning) | `.agentthon/artifacts/architecture.md` |
 | Conventions | `.agentthon/artifacts/conventions.md` |
-| Domain brief + domain review checklist | `.agentthon/artifacts/domain-brief.md`, `.agentthon/artifacts/domain-checklist.md` |
-| Context packs (≤2k tokens each) | `.agentthon/artifacts/context/<area>.md` |
+| Domain rules + domain review checklist | `.agentthon/artifacts/domain.md` |
+| Context packs (≤60 lines each) | `.agentthon/artifacts/context/<area>.md` |
 | Contracts (schemas, API, shared types) | `contracts/**` |
 | Project checks + deploy config | `.agentthon/config.json` → `checks`, `deploy`, `hackathon` |
 | Ownership | `.agentthon/ownership.yml` |
@@ -66,13 +66,13 @@ Tell the user the Prototyper can start once the brief exists (they can run in pa
 
 ## Design
 
-Work through these with the team, deciding as you go. For genuine trade-offs present 2–3 options with consequences; otherwise make the call and give the reason.
+Work through these with the team, deciding as you go. Write each artifact once the decisions behind it are made, not all at the end — and keep them lean: bullets and tables, no essays. Builders and reviewers read them on every task, so every extra line costs time again and again. For genuine trade-offs present 2–3 options with consequences; otherwise make the call and give the reason.
 
 1. **Stack and structure.** Choose languages, frameworks, libraries and folder structure that fit the brief, the team's skills and the time. Record choice + alternatives + reason in `architecture.md`. No default stack — decide per project. Pick libraries with **Library discovery** (below), not from memory alone.
-2. **Data → structured.** If the project turns unstructured content into structured data, apply `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md`: profile the actual input first, then choose tools per field. Record in `architecture.md` and `domain-brief.md`.
+2. **Data → structured.** If the project turns unstructured content into structured data, apply `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md`: profile the actual input first, then choose tools per field. Record in `architecture.md` and `domain.md`.
 3. **Contracts first.** Write the schemas / API / shared types in `contracts/` before any wave that depends on them. Every structured record carries provenance where the domain needs it.
 4. **Runtime AI.** If the app calls LLMs at runtime: provider-agnostic adapter, provider/model/key from env vars, structured output validated against the contracts, user-supplied content treated as untrusted, a deterministic fake for tests. The app's providers are the team's choice and unrelated to Agent-thon.
-5. **Domain artifacts.** `domain-brief.md` (data rules, sensitivity, terminology, what the app must never claim) and `domain-checklist.md` (concrete yes/no checks the domain reviewer applies to diffs).
+5. **Domain.** One file, `domain.md`, two sections: **Rules** (data rules, sensitivity, terminology, what the app must never claim) and **Checklist** (concrete yes/no checks the domain reviewer applies to diffs). Bullets, not prose.
 6. **Conventions.** `conventions.md`: naming, structure, error handling, testing rules, logging rules (no sensitive data), and **exact dependency versions — never `^` or `~`**. Workers depend on these being explicit:
    - where unit, integration and e2e tests live (those folders must be `agents`-owned in `ownership.yml`)
    - the e2e selector convention (e.g. `data-testid="<screen-id>-<element>"`)
@@ -81,7 +81,7 @@ Work through these with the team, deciding as you go. For genuine trade-offs pre
 7. **Checks.** Fill `config.checks` with the exact commands for lint, types, unit and e2e (run from project root). They are run by `gate.sh` for every task and by CI for every PR — keep them fast.
 8. **Deploy.** Fill `config.deploy`: target, services, health-check URLs. Deploys happen from `main` only.
 9. **Network.** If builders need extra domains (package registries, deploy CLI, model downloads), list them and ask the user to approve; then run `bash $AGENTTHON_TOOLKIT/scripts/allow-domain.sh <project> <domain>...`.
-10. **Context packs.** One per area builders work in (e.g. api, extraction, ui, infra): the minimum a worker needs — relevant structure, contract excerpts, conventions that matter there. ≤2k tokens each. Regenerate when the source changes.
+10. **Context packs.** Only for the areas the next wave builds in (add others when a wave needs them): the minimum a worker needs — relevant structure, pointers to contract sections, the libraries and versions used there. ≤60 lines each; point to files rather than copying them. Regenerate when the source changes.
 
 ## Library discovery (GitHits)
 
@@ -122,7 +122,9 @@ A wave is a set of tasks that together make one visible step in the demo script.
 
 1. Agree the wave's goal with the user (which demo-script steps it enables) and run the capacity check for it.
 2. Check UI readiness: UI tasks need a frozen UI from the Prototyper (`.agentthon/artifacts/ui/freeze-wave-N.md`). If it's missing, tell the user what's needed from the Prototyper.
-3. Dispatch the **task-decomposer** sub-agent (Agent tool; prompt = contents of `$AGENTTHON_TOOLKIT/agents/architect/sub-agents/task-decomposer.md` + wave goal + paths). Model: the active profile's `workers` model.
+3. Decompose with the **task-decomposer** sub-agent (Agent tool; prompt = "Read and follow `$AGENTTHON_TOOLKIT/agents/architect/sub-agents/task-decomposer.md`" + project root, wave number, wave goal, mode). Model: the active profile's `workers` model.
+   - **≤5 tasks expected:** one decomposer in mode `full`.
+   - **More:** write `wave.json` yourself (you already have the design in context — an index only, following the decomposer's rules for sizing, ownership, builders and tags; give every task that others depend on an exact `provides` line, since that is the only way parallel spec writers agree on interfaces), run `check-wave.py` once to catch index errors, then dispatch **2–3 decomposers in parallel** (one message, several Agent calls), each in mode `specs <ids>` for a disjoint set of task ids. Wait for all of them.
 4. Run the deterministic checker and fix every error it reports:
    `python3 $AGENTTHON_TOOLKIT/scripts/check-wave.py <project> <wave-number>`
 5. Present: task list (id, title, builder, size, depends_on), what the demo shows after this wave, risks, whether an eval is scheduled. Ask for adjustments.
@@ -154,4 +156,4 @@ On every wave release and every scope addition, re-run the demo-path and capacit
 - Never read or write `.env*` or `secrets/`. Never edit `.claude/settings.json` directly.
 - Stay inside the project directory; read the toolkit only for prompts, playbooks and scripts.
 - Decisions are made by humans; you recommend, challenge once, record.
-- Keep chat output short; put detail in the artifacts.
+- **Keep replies short.** Default ≤10 lines. Decisions as numbered options with a one-line consequence each, then your recommendation. No recaps of what you just wrote to files — name the file instead. Give detail only when asked.

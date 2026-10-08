@@ -14,6 +14,7 @@
       "assigned_to": "FILL_IN: builder-api | builder-extraction | builder-ai-integration | builder-ui | builder-composer | builder-infra",
       "size": "S",
       "depends_on": [],
+      "provides": "FILL_IN: one line — the public interface later tasks use, e.g. build_graph(triples: list[dict]) -> dict in src/x/graph.py; or empty if nothing depends on it",
       "owns_files": ["FILL_IN: exact paths this task creates/modifies — all must be agents-owned in ownership.yml"],
       "reads": ["FILL_IN: files/context packs the worker must read"],
       "tags": ["FILL_IN: any of api, extraction, ai, domain, ui, infra, security"],

@@ -1,43 +1,26 @@
 # Task NNN: [Title]
+<!-- Cap: ~60 lines / 3,500 chars. Point to contracts, context packs and code by path + section; never copy them in. -->
 
-## Assignment
-[builder-api | builder-extraction | builder-ai-integration | builder-ui | builder-composer | builder-infra]
+**Builder:** builder-[api|extraction|ai-integration|ui|composer|infra] · **Wave/size:** wave-N / S|M · **Tags:** [api, extraction, ai, domain, ui, infra, security]
+**Why:** [one line: which demo-script step this enables]
+**Depends on:** task-NNN ([the file / function / endpoint it provides]) | none
 
-## Wave / Size / Tags
-wave-N / S|M|L / [api, extraction, ai, domain, ui, infra, security]
-
-## Why (link to brief)
-[One or two lines: which part of the demo script this enables]
-
-## Dependencies
-- task-NNN — must exist: [specific file path / function / endpoint]
-
-## Files to create or modify (owned by this task; must be agents-owned in ownership.yml)
+## Files (owned; agents-owned in ownership.yml)
 - [exact/path.ext]
 - [exact/path.test.ext]
 
-## Files to read (with relevant sections)
-- .agentthon/artifacts/context/[pack].md
-- contracts/[file] (section: …)
-- [exact/path.ext] (lines NNN–NNN: what's relevant)
+## Read
+- contracts/[file] → [section / type name]
+- .agentthon/artifacts/context/[pack].md → [section]
+- [exact/path.ext] → [lines or symbol]
 
-## Specification
-
-### Interface
-```[language]
-[exact signature, schema, props or endpoint]
-```
-
-### Behaviour
-- [rule]
-- [edge case]
-- [error handling]
+## Do
+- Interface: [one line, e.g. `extract(text: str) -> Extraction` per contracts/extraction.schema.json]
+- [behaviour rule / edge case / error handling — only what is NOT already in the contract or context pack]
 
 ## Unit tests (written and run by the builder)
-- [test: input → expected outcome]
+- [input → expected outcome]
 
 ## Acceptance criteria
 - [ ] [specific, testable criterion]
-- [ ] All project checks in config.checks pass
-- [ ] Only the files listed above were changed
-- [ ] Conventions in .agentthon/artifacts/conventions.md followed
+- [ ] config.checks pass; only the files above changed; conventions.md followed

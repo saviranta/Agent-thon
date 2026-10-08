@@ -59,7 +59,7 @@ Loop until `F ready <N>` returns nothing to dispatch and nothing is in progress:
      - gate FAIL → **fix cycle** (standard).
    - **FAIL** → clear file/line cause → fix cycle; unclear (crash, opaque error) → **debug cycle**.
    - **BLOCKED** → `F task-park <id> "<blocked_reason>"`.
-3. **Per-task review** (`review_scope: task`, i.e. max): dispatch in parallel the reviewers that apply, each with step `review-<kind>` and inputs: spec path, diff range `<base>..HEAD` in the task worktree, context pack, `domain-checklist.md` for domain:
+3. **Per-task review** (`review_scope: task`, i.e. max): dispatch in parallel the reviewers that apply, each with step `review-<kind>` and inputs: spec path, diff range `<base>..HEAD` in the task worktree, context pack, `.agentthon/artifacts/domain.md` for domain:
    - `reviewer-code` — always
    - `reviewer-security` — tags `security`, `api`, `ai` or `extraction`
    - `reviewer-domain` — tags `domain`, `extraction` or `ai`
@@ -77,7 +77,7 @@ Dispatch `debugger-quick` (step `debug-quick`). FIXED (verdict PASS) → re-gate
 ## Wave review (status `reviewing`, only when `review_scope` is `wave`, i.e. pro)
 When all tasks are merged or parked:
 1. `F wave-set <N> status '"reviewing"'`.
-2. Dispatch `reviewer-combined` with id `wave-<N>`, step `review`, working directory = foreman worktree, inputs: diff range `<wave base>..HEAD`, the wave's task list (ids, tags, owns_files from `.agentthon/waves/wave-<N>/wave.json`), `domain-checklist.md`, context packs. It returns per-task findings.
+2. Dispatch `reviewer-combined` with id `wave-<N>`, step `review`, working directory = foreman worktree, inputs: diff range `<wave base>..HEAD`, the wave's task list (ids, tags, owns_files from `.agentthon/waves/wave-<N>/wave.json`), `.agentthon/artifacts/domain.md`, context packs. It returns per-task findings.
 3. NEEDS_CHANGES → group findings by task. For each group: `F attempt <task> <severity>`; not exhausted → `F fix-start <N> fix-<task>-<n> <task>` and dispatch `bug-fixer` there; then gate (`--task <task> --base <fix base>`), `F fix-merge <label>`.
    Run independent fix groups in parallel up to `parallel_workers`.
 4. Re-run `reviewer-combined` once on the fix diff only (step `review-verify`). Remaining findings are not fixed again — record them as **Known issues**: `F wave-set <N> known_issues '<json list of one-line strings>'` (they appear in the PR body).

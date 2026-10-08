@@ -1,6 +1,6 @@
 # Playbook: unstructured text → structured data
 
-A method, not a tool choice. The Architect applies it per project (decisions go to `architecture.md` and `domain-brief.md`); builder-extraction and builder-ai-integration follow it; the domain reviewer checks against it.
+A method, not a tool choice. The Architect applies it per project (decisions go to `architecture.md` and `domain.md`); builder-extraction and builder-ai-integration follow it; the domain reviewer checks against it.
 
 ## 1. Schema first
 - Define the target records in `contracts/` before extracting anything: fields, types, required/optional, enumerations, units, identifiers.
