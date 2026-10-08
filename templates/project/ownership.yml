@@ -2,6 +2,7 @@
 # Maintained by the Architect together with the team. See TEAM.md for the working rules.
 #
 # owner:        agents | architect | shared | @github-handle
+#               (architect = the planning agents: Architect, and Prototyper for .agentthon/artifacts/ui/)
 # reviewers:    optional list of @handles requested on PRs touching this area
 # change_rule:  optional free text for architect/shared areas
 #

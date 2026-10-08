@@ -3,7 +3,16 @@
 A project-agnostic multi-agent coding toolkit for hackathons and short team builds, derived from Agents-max.
 You talk to the **Architect** and the **Prototyper**; the **Foreman** builds, reviews, tests and opens PRs without supervision.
 
-Full design: [PLAN.md](PLAN.md). Build status: phase A (foundation) done; phases B–F in progress.
+Full design: [PLAN.md](PLAN.md). Build status: phases A (foundation) and B (Architect, Prototyper) done; C–F in progress.
+
+## Flow
+
+1. **Architect, session 0** — interview + challenge → `brief.md`
+2. **Prototyper** — wireframes, `screens.json`, "UI frozen for wave N"
+3. **Architect** — stack, contracts, ownership, checks; plans wave N; "release wave N" → plan PR
+4. **Merge the plan PR** → wave released
+5. **Foreman** — builds, reviews, tests the wave → opens wave PR
+6. **Merge the wave PR** → deploy from `main`
 
 ## Quick start
 
@@ -53,6 +62,8 @@ bash scripts/run-agent.sh foreman <project> resume
 | `run-agent.sh` | start architect / prototyper / foreman scoped to one project |
 | `profile.sh` | show/switch profile, resolve models and settings |
 | `state.sh` | runtime state, Foreman lock, checkpoints, pause |
+| `check-wave.py` | deterministic wave validation (ownership, claims, overlaps, deps, specs) |
+| `allow-domain.sh` | add approved network domains to a project's sandbox |
 
 ## Project layout
 

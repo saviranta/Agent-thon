@@ -143,7 +143,8 @@ Combined reviewer (pro) runs checklists in order code → security → domain �
 - Maintains `ownership.yml` with the team (§5) and regenerates CODEOWNERS.
 - Sub-agents: task-decomposer, graph-checker (file overlaps, deps, every impl task has tests, every UI task references a wireframe, **every `owns_files` path is agent-owned in ownership.yml**).
 - Outputs: `architecture.md`, `contracts/` (only Architect writes), `conventions.md` (incl. exact-version rule: no `^`/`~`), context packs (≤2k tokens each), `waves/wave-N.json` + `task-specs/`.
-- Releases waves on "release wave N"; designs wave N+1 while N builds.
+- Releases waves on "release wave N": commits wave, specs, contract/ownership/UI changes on `plan/wave-N` and opens a PR. **Merging the plan PR releases the wave**; the Foreman ingests waves from `main`. Designs wave N+1 while N builds.
+- Wave validation is deterministic: `scripts/check-wave.py` (overlaps, deps, ownership, claims, specs have tests/criteria, UI tasks have a frozen UI) — no LLM graph-checker.
 - At the start of every turn reads `questions.md`, pending evals, open PRs and `architect`-labelled issues / `requests.md`; presents them.
 - Regenerates AI-coder instruction files (§5.5) whenever conventions, ownership or contracts change.
 - Any team member can talk to the Architect; requests from teammates go through the same brief/challenge rules.
