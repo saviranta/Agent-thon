@@ -44,6 +44,15 @@ if [[ "$AGENT" == "foreman" ]]; then
   bash "$TOOLKIT_ROOT/scripts/state.sh" "$PROJECT_ROOT" lock acquire $$
 fi
 
+# Use the Claude subscription login (Pro/Max), not an API key that happens to be in the shell.
+# Set AGENTTHON_AUTH=api to keep ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN deliberately.
+if [[ "${AGENTTHON_AUTH:-subscription}" != "api" ]]; then
+  if [[ -n "${ANTHROPIC_API_KEY:-}${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
+    echo "Note: ignoring ANTHROPIC_API_KEY/ANTHROPIC_AUTH_TOKEN for this session (subscription login is used; AGENTTHON_AUTH=api to keep them)."
+  fi
+  unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+fi
+
 export AGENTTHON_TOOLKIT="$TOOLKIT_ROOT"
 export AGENTTHON_PROJECT="$PROJECT_ROOT"
 export AGENTTHON_AGENT="$AGENT"

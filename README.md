@@ -67,6 +67,10 @@ bash scripts/profile.sh <project> default max  # shared default in config.json (
 
 Claude Code, git, Python 3, `gh` (authenticated). Optional: GitHits MCP configured in Claude Code (the Architect uses it for library discovery).
 
+## Billing
+
+`run-agent.sh` ignores `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` from your shell so agents use your Claude subscription login (Pro/Max). Set `AGENTTHON_AUTH=api` to bill an API key deliberately. Check with `/status` inside a session.
+
 ## Usage limit reached
 
 The Foreman stops cleanly and says so in `.agentthon/runtime/status.md`. Switch account (`/logout`, `/login`), then:
