@@ -13,6 +13,10 @@ areas:
     owner: architect
     change_rule: "Only via the Architect"
 
+  - path: ".agentthon/evals/reports/**"
+    owner: agents
+    change_rule: "Eval reports written by the Foreman's eval tester"
+
   - path: "contracts/**"
     owner: architect
     change_rule: "Only via an Architect decision; all owners notified"

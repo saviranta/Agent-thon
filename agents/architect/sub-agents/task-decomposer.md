@@ -46,6 +46,7 @@ Write `wave.json` first (establishes ids), then the specs.
 - testable acceptance criteria (not "works correctly")
 - for UI tasks: the wireframe file and screen ids from the frozen UI, and the states to implement (empty, loading, error, populated)
 - for runtime-AI tasks: use the fake adapter in tests; never call a real provider in tests
+- libraries: name the exact library and version from `architecture.md` → Library decisions, and point to its working example if one was recorded
 
 **Ordering.** Foundation first (scaffold, contracts wiring), then parallelisable pieces, then wiring. Keep dependency chains short so the Foreman can run tasks in parallel on the max profile.
 

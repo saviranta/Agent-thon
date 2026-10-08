@@ -39,7 +39,7 @@ A="$PROJECT_ROOT/.agentthon"
 echo "Initialising $PROJECT_NAME at $PROJECT_ROOT ($MODE)"
 
 # ─── .agentthon/ (shared) and .agentthon/runtime/ (local) ───
-mkdir -p "$A"/artifacts/{context,wireframes,decisions} "$A"/waves "$A"/evals "$A"/runtime/{checkpoints,logs}
+mkdir -p "$A"/artifacts/{context,ui} "$A"/waves "$A"/evals/reports "$A"/runtime/{checkpoints,results,worktrees}
 
 INIT_T="$T/config.json" INIT_OUT="$A/config.json" INIT_NAME="$PROJECT_NAME" INIT_DESC="$DESC" \
 INIT_ROOT="$PROJECT_ROOT" INIT_TOOLKIT="$TOOLKIT_ROOT" INIT_TS="$(now_utc)" INIT_MODE="$MODE" \
@@ -57,7 +57,6 @@ cp "$T/ownership.yml" "$A/ownership.yml"
 cp "$T/claims.md" "$A/claims.md"
 cp "$T/wave.json" "$A/waves/_template.wave.json"
 cp "$T/task-spec.md" "$A/waves/_template.task-spec.md"
-: > "$A/questions.md"
 : > "$A/requests.md"
 echo "  .agentthon/ created"
 

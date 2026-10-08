@@ -46,13 +46,15 @@
       "Bash(git *)",
       "Bash(gh pr create*)",
       "Bash(gh pr view*)",
+      "Bash(gh pr edit*)",
       "Bash(gh pr list*)",
       "Bash(gh pr comment*)",
       "Bash(gh issue list*)",
       "Bash(gh issue view*)",
       "Bash(gh issue comment*)",
       "Bash(bash <toolkit_abs>/scripts/*)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "mcp__GitHits__*"
     ]
   }
 }

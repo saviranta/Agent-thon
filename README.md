@@ -3,7 +3,7 @@
 A project-agnostic multi-agent coding toolkit for hackathons and short team builds, derived from Agents-max.
 You talk to the **Architect** and the **Prototyper**; the **Foreman** builds, reviews, tests and opens PRs without supervision.
 
-Full design: [PLAN.md](PLAN.md). Build status: phases A (foundation) and B (Architect, Prototyper) done; C–F in progress.
+Full design: [PLAN.md](PLAN.md). Build status: phases A (foundation), B (Architect, Prototyper) and C (Foreman + gate) done; D–F in progress (workers not yet written — the Foreman can't build until D).
 
 ## Flow
 
@@ -45,6 +45,10 @@ bash scripts/profile.sh <project> set max    # this machine only; applies from n
 bash scripts/profile.sh <project> default max  # shared default in config.json (commit via PR)
 ```
 
+## Requirements
+
+Claude Code, git, Python 3, `gh` (authenticated). Optional: GitHits MCP configured in Claude Code (the Architect uses it for library discovery).
+
 ## Usage limit reached
 
 The Foreman stops cleanly and says so in `.agentthon/runtime/status.md`. Switch account (`/logout`, `/login`), then:
@@ -64,6 +68,10 @@ bash scripts/run-agent.sh foreman <project> resume
 | `state.sh` | runtime state, Foreman lock, checkpoints, pause |
 | `check-wave.py` | deterministic wave validation (ownership, claims, overlaps, deps, specs) |
 | `allow-domain.sh` | add approved network domains to a project's sandbox |
+| `foreman.py` | Foreman mechanics: waves, tasks, worktrees, merges, PRs, status |
+| `gate.sh` | config-driven checks + ownership check (used by the Foreman and CI) |
+| `ownership-check.py` | ownership rules for task worktrees and PRs |
+| `smoke.sh` | health checks after deploy |
 
 ## Project layout
 
