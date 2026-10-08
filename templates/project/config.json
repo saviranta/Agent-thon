@@ -59,6 +59,11 @@
     "task_branch_prefix": "agentthon/task-",
     "github_repo": ""
   },
+  "team": {
+    "_comment": "Filled by the Architect in session 0. github = handle without @. Used for CODEOWNERS and instruction files.",
+    "members": [],
+    "default_reviewers": []
+  },
   "checks": {
     "_comment": "Filled by the Architect once the stack is chosen. gate.sh runs these from the project root (or a fresh worktree) in this order; setup must make a fresh worktree runnable (install deps from lockfiles).",
     "setup": [],

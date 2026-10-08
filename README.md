@@ -3,7 +3,7 @@
 A project-agnostic multi-agent coding toolkit for hackathons and short team builds, derived from Agents-max.
 You talk to the **Architect** and the **Prototyper**; the **Foreman** builds, reviews, tests and opens PRs without supervision.
 
-Full design: [PLAN.md](PLAN.md). Build status: phases A–D done (foundation, Architect + Prototyper, Foreman + gate, workers). Next: E (team: CI, CODEOWNERS, AI-coder instruction files), F (dry run). Eval tester comes in phase G.
+Full design: [PLAN.md](PLAN.md). Build status: phases A–E done (foundation, Architect + Prototyper, Foreman + gate, workers, team setup). Next: F (dry run). Eval tester and extras come in phase G.
 
 ## Flow
 
@@ -57,6 +57,12 @@ bash scripts/profile.sh <project> default max  # shared default in config.json (
 | Reviewers | Foreman | `workers/reviewer-{code,security,domain,ui,combined}.md` + `checklists/` |
 | Testers | Foreman | `workers/tester-{integration,e2e}.md` |
 
+## Team setup per project
+
+1. `agentthon-init.sh` creates `TEAM.md`, PR template, CI (`checks`, `ownership`, `hygiene` jobs), CODEOWNERS and the AI-coder instruction files.
+2. Create the GitHub repo, add `origin`, push `main`, run `protect-main.sh` (branch protection needs a public repo or GitHub Pro/Team for private repos).
+3. Teammates clone it; their AI tools (Copilot, Codex, Claude Code) read the generated instruction files; CI enforces the rules on every PR.
+
 ## Requirements
 
 Claude Code, git, Python 3, `gh` (authenticated). Optional: GitHits MCP configured in Claude Code (the Architect uses it for library discovery).
@@ -84,6 +90,11 @@ bash scripts/run-agent.sh foreman <project> resume
 | `gate.sh` | config-driven checks + ownership check (used by the Foreman and CI) |
 | `ownership-check.py` | ownership rules for task worktrees and PRs |
 | `smoke.sh` | health checks after deploy |
+| `update-tools.sh` | copy CI scripts into `<project>/.agentthon/bin/` |
+| `gen-codeowners.py` | `.github/CODEOWNERS` from `ownership.yml` |
+| `sync-instructions.py` | `AGENTS.md`, `.github/copilot-instructions.md`, `CLAUDE.md` from one source |
+| `check-versions.py` | reject `^`, `~`, ranges in package.json / requirements |
+| `protect-main.sh` | GitHub branch protection + `architect` / `agent-review` labels |
 
 ## Project layout
 

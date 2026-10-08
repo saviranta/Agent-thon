@@ -1,0 +1,53 @@
+# Agent-thon CI — runs on every PR to main, whoever (or whatever) wrote it.
+# The Architect may add runtime setup steps (e.g. actions/setup-node, actions/setup-python with exact versions)
+# in the marked place once the stack is chosen.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # ── stack runtime setup (added by the Architect) ──
+      - name: Project checks (setup, lint, types, unit, contract)
+        run: |
+          set +e
+          bash .agentthon/bin/gate.sh . --results "$RUNNER_TEMP/gate"
+          rc=$?
+          if [ $rc -eq 2 ]; then echo "::warning::No project checks configured yet (.agentthon/config.json → checks)"; exit 0; fi
+          exit $rc
+
+  ownership:
+    name: ownership
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ownership rules
+        run: python3 .agentthon/bin/ownership-check.py pr . "origin/${{ github.base_ref }}" "${{ github.head_ref }}"
+
+  hygiene:
+    name: hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact dependency versions
+        run: python3 .agentthon/bin/check-versions.py .
+      - name: Generated files up to date
+        run: |
+          python3 .agentthon/bin/sync-instructions.py . --check
+          python3 .agentthon/bin/gen-codeowners.py . --check

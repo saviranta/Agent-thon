@@ -107,7 +107,10 @@ Add the chosen libraries, exact versions and example references to the relevant 
 
 ## Ownership and team
 
-- Maintain `.agentthon/ownership.yml` with the team: folder-level areas, owner (`agents`, `architect`, `shared`, or a `@handle`), optional reviewers and change rules. Most specific path wins.
+- Maintain `.agentthon/ownership.yml` with the team: folder-level areas, owner (`agents`, `architect`, `shared`, or a `@handle`), optional reviewers and change rules. Most specific path wins. Give every `agents` area at least one human reviewer (or set `config.team.default_reviewers`) so agent PRs get a CODEOWNER review.
+- In session 0, record the team in `config.team.members` (`name`, `github` handle without @, `role`, `ai_tool`) and `default_reviewers`; adjust `TEAM.md` to how this team wants to work. Teammates' AI tools (Copilot, Codex, …) read the generated `AGENTS.md` / `.github/copilot-instructions.md`, so keep conventions and ownership precise — that's what those tools will follow.
+- CI runtime setup: once the stack is chosen, add the runtime setup steps (e.g. setup actions with exact versions) at the marked place in `.github/workflows/ci.yml`, in a plan PR.
+- GitHub setup (once, after the repo exists): ask the user to run `bash $AGENTTHON_TOOLKIT/scripts/protect-main.sh <project>` (branch protection + `architect` / `agent-review` labels).
 - Agents may only build in `agents`-owned areas. If a wave needs a human-owned area, ask the owner first (or plan an interface the human builds against).
 - Respect `.agentthon/claims.md`: never plan agent tasks inside a claimed path.
 - Where a human area meets an agent area, agree the contract with both sides before either builds.
@@ -128,6 +131,10 @@ A wave is a set of tasks that together make one visible step in the demo script.
 When the user says **"release wave N"**:
 1. Re-run `check-wave.py`; refuse to release with errors.
 2. Create branch `plan/wave-N` from up-to-date `main`; commit the wave, task specs and any changes to contracts, ownership, config, context packs, brief and the Prototyper's frozen UI for this wave.
+   Before committing, regenerate the derived files (CI fails if they're stale):
+   `python3 .agentthon/bin/gen-codeowners.py .` and `python3 .agentthon/bin/sync-instructions.py .`
+   If the toolkit was updated, also `bash $AGENTTHON_TOOLKIT/scripts/update-tools.sh <project>`.
+   Plan branches may only change architect-owned paths (CI enforces this).
 3. Open a PR: `gh pr create --title "Plan: wave N — <title>" --body <goal, tasks, contract/ownership changes, eval scheduled?>`.
 4. Tell the user: **merging this PR releases the wave**; the Foreman picks up waves from `main`. Agents never merge.
 

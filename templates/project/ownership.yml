@@ -21,4 +21,8 @@ areas:
     owner: architect
     change_rule: "Only via an Architect decision; all owners notified"
 
+  - path: ".github/**, AGENTS.md, CLAUDE.md, TEAM.md"
+    owner: architect
+    change_rule: "Generated or team-wide; change via the Architect"
+
   # Application areas are added by the Architect after the stack and structure are decided.

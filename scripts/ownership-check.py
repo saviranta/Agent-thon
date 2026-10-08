@@ -10,7 +10,7 @@ Task mode (gate, inside a task worktree):
 PR mode (CI, any PR):
   ownership-check.py pr <repo-dir> <base-ref> <head-branch>
     agentthon/* branches: only agents-owned paths (+ .agentthon/evals/reports/**).
-    plan/* branches: only .agentthon/** and contracts/**.
+    plan/* branches: only architect-owned paths (.agentthon/**, contracts/**, generated and team files).
     other (human) branches: never fail on ownership — list the owners whose areas are touched
     (GitHub CODEOWNERS enforces approvals) and warn about claimed or agent-owned paths.
 
@@ -93,8 +93,8 @@ def pr_mode(repo, base, head):
             if owner != "agents":
                 errors.append(f"{f}: agent branch may only change agents-owned paths (owner: {owner})")
         elif head.startswith("plan/"):
-            if not (f.startswith(".agentthon/") or f.startswith("contracts/")):
-                errors.append(f"{f}: plan branch may only change .agentthon/** and contracts/**")
+            if owner != "architect":
+                errors.append(f"{f}: plan branch may only change architect-owned paths (owner: {owner})")
         else:
             if owner == "agents":
                 warnings.append(f"{f}: agent-owned area — coordinate with the Architect")

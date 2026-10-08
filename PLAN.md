@@ -423,6 +423,13 @@ Generic method every extraction/AI builder and the domain reviewer follow. The A
 
 ---
 
+### 13c. Phase E notes (as built)
+
+- CI can't see the toolkit, so init vendors the needed scripts into `<project>/.agentthon/bin/` (`update-tools.sh` refreshes them via a plan PR).
+- CI jobs: `checks` (gate; 'not configured' is a warning), `ownership` (PR mode by branch type: `agentthon/*` agents-owned only, `plan/*` architect-owned only, human branches warn), `hygiene` (exact versions, generated files in sync).
+- `protect-main.sh`: PR required, the three CI jobs required, 1 approval incl. code owners, admins may bypass (a solo admin can merge agent PRs opened under their own account). Branch protection on private repos needs GitHub Pro/Team.
+- Team members and default reviewers live in `config.team`; every agents area needs a human reviewer for CODEOWNERS.
+
 ### 13b. Phase C notes (as built)
 
 - Foreman mechanics are scripts: `foreman.py` (ingest/wait, wave-start/sync, ready, task-start/merge/park, fix-start/merge, attempt, reconcile, result, log, question, status, open-pr), `gate.sh` (config-driven checks + ownership), `ownership-check.py` (task mode / PR mode), `smoke.sh`.
