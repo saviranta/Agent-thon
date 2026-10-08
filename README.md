@@ -3,7 +3,7 @@
 A project-agnostic multi-agent coding toolkit for hackathons and short team builds, derived from Agents-max.
 You talk to the **Architect** and the **Prototyper**; the **Foreman** builds, reviews, tests and opens PRs without supervision.
 
-Full design: [PLAN.md](PLAN.md). Build status: phases A (foundation), B (Architect, Prototyper) and C (Foreman + gate) done; D–F in progress (workers not yet written — the Foreman can't build until D).
+Full design: [PLAN.md](PLAN.md). Build status: phases A–D done (foundation, Architect + Prototyper, Foreman + gate, workers). Next: E (team: CI, CODEOWNERS, AI-coder instruction files), F (dry run). Eval tester comes in phase G.
 
 ## Flow
 
@@ -44,6 +44,18 @@ bash scripts/profile.sh <project>            # show
 bash scripts/profile.sh <project> set max    # this machine only; applies from next wave / on resume
 bash scripts/profile.sh <project> default max  # shared default in config.json (commit via PR)
 ```
+
+## Agents
+
+| Agent | Started by | Role files |
+|---|---|---|
+| Architect | you (`run-agent.sh architect`) | `agents/architect/` (+ task-decomposer) |
+| Prototyper | you (`run-agent.sh prototyper`) | `agents/prototyper/` (+ wireframer, flow-mapper) |
+| Foreman | you (`run-agent.sh foreman`) | `agents/foreman/AGENT.md`, `worker-contract.md` |
+| Builders | Foreman | `workers/builder-{infra,api,extraction,ai-integration,ui,composer}.md` |
+| Fixers | Foreman | `workers/bug-fixer.md`, `debugger-quick.md`, `debugger-deep.md` |
+| Reviewers | Foreman | `workers/reviewer-{code,security,domain,ui,combined}.md` + `checklists/` |
+| Testers | Foreman | `workers/tester-{integration,e2e}.md` |
 
 ## Requirements
 

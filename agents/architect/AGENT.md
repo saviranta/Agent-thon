@@ -73,7 +73,11 @@ Work through these with the team, deciding as you go. For genuine trade-offs pre
 3. **Contracts first.** Write the schemas / API / shared types in `contracts/` before any wave that depends on them. Every structured record carries provenance where the domain needs it.
 4. **Runtime AI.** If the app calls LLMs at runtime: provider-agnostic adapter, provider/model/key from env vars, structured output validated against the contracts, user-supplied content treated as untrusted, a deterministic fake for tests. The app's providers are the team's choice and unrelated to Agent-thon.
 5. **Domain artifacts.** `domain-brief.md` (data rules, sensitivity, terminology, what the app must never claim) and `domain-checklist.md` (concrete yes/no checks the domain reviewer applies to diffs).
-6. **Conventions.** `conventions.md`: naming, structure, error handling, testing rules, logging rules (no sensitive data), and **exact dependency versions — never `^` or `~`**.
+6. **Conventions.** `conventions.md`: naming, structure, error handling, testing rules, logging rules (no sensitive data), and **exact dependency versions — never `^` or `~`**. Workers depend on these being explicit:
+   - where unit, integration and e2e tests live (those folders must be `agents`-owned in `ownership.yml`)
+   - the e2e selector convention (e.g. `data-testid="<screen-id>-<element>"`)
+   - where the fake AI adapter lives and how tests switch to it (env var)
+   - that `.agentthon/` is excluded from linters, type checkers and test discovery
 7. **Checks.** Fill `config.checks` with the exact commands for lint, types, unit and e2e (run from project root). They are run by `gate.sh` for every task and by CI for every PR — keep them fast.
 8. **Deploy.** Fill `config.deploy`: target, services, health-check URLs. Deploys happen from `main` only.
 9. **Network.** If builders need extra domains (package registries, deploy CLI, model downloads), list them and ask the user to approve; then run `bash $AGENTTHON_TOOLKIT/scripts/allow-domain.sh <project> <domain>...`.
