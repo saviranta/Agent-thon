@@ -1,0 +1,107 @@
+#!/bin/bash
+# agentthon-init.sh — Initialise a project for Agent-thon (non-interactive; the agentthon-init skill calls this)
+#
+# Usage:
+#   agentthon-init.sh new   <name> "<description>"
+#   agentthon-init.sh adopt <path> "<description>"
+#
+# New projects go to ClaudeFolder/ClaudeProjects/<name>. Adopted projects must be inside ClaudeFolder.
+
+set -euo pipefail
+source "$(dirname "$0")/lib.sh"
+
+MODE="${1:-}"
+TARGET="${2:-}"
+DESC="${3:-}"
+
+[[ "$MODE" == "new" || "$MODE" == "adopt" ]] && [[ -n "$TARGET" ]] || {
+  echo "Usage: agentthon-init.sh new <name> \"<description>\" | adopt <path> \"<description>\"" >&2
+  exit 1
+}
+
+if [[ "$MODE" == "new" ]]; then
+  [[ "$TARGET" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || die "Project name may contain letters, digits, '.', '_' and '-' only"
+  PROJECT_ROOT="$PROJECTS_DIR/$TARGET"
+  [[ -e "$PROJECT_ROOT" ]] && die "Already exists: $PROJECT_ROOT (use adopt)"
+  mkdir -p "$PROJECT_ROOT"
+else
+  TARGET="${TARGET/#\~/$HOME}"
+  [[ -d "$TARGET" ]] || die "Directory not found: $TARGET"
+  PROJECT_ROOT="$(cd "$TARGET" && pwd -P)"
+  [[ "$PROJECT_ROOT" == "$CLAUDE_FOLDER"/* ]] || die "Project must be inside $CLAUDE_FOLDER"
+  [[ -d "$PROJECT_ROOT/.agentthon" ]] && die "Already initialised: $PROJECT_ROOT/.agentthon"
+fi
+
+PROJECT_NAME="$(basename "$PROJECT_ROOT")"
+T="$TEMPLATES_DIR/project"
+A="$PROJECT_ROOT/.agentthon"
+
+echo "Initialising $PROJECT_NAME at $PROJECT_ROOT ($MODE)"
+
+# ─── .agentthon/ (shared) and .agentthon/runtime/ (local) ───
+mkdir -p "$A"/artifacts/{context,wireframes,decisions} "$A"/waves "$A"/evals "$A"/runtime/{checkpoints,logs}
+
+INIT_T="$T/config.json" INIT_OUT="$A/config.json" INIT_NAME="$PROJECT_NAME" INIT_DESC="$DESC" \
+INIT_ROOT="$PROJECT_ROOT" INIT_TOOLKIT="$TOOLKIT_ROOT" INIT_TS="$(now_utc)" INIT_MODE="$MODE" \
+python3 -c '
+import json, os
+e = os.environ
+c = json.load(open(e["INIT_T"]))
+c.update(project_name=e["INIT_NAME"], project_description=e["INIT_DESC"], project_root=e["INIT_ROOT"],
+         toolkit_root=e["INIT_TOOLKIT"], created_at=e["INIT_TS"], mode=e["INIT_MODE"])
+with open(e["INIT_OUT"], "w") as f:
+    json.dump(c, f, indent=2); f.write("\n")
+'
+cp "$T/state.json" "$A/runtime/state.json"
+cp "$T/ownership.yml" "$A/ownership.yml"
+cp "$T/claims.md" "$A/claims.md"
+cp "$T/wave.json" "$A/waves/_template.wave.json"
+cp "$T/task-spec.md" "$A/waves/_template.task-spec.md"
+: > "$A/questions.md"
+: > "$A/requests.md"
+echo "  .agentthon/ created"
+
+# ─── .claude/settings.json (project-scoped permissions) ───
+mkdir -p "$PROJECT_ROOT/.claude"
+if [[ -f "$PROJECT_ROOT/.claude/settings.json" ]]; then
+  echo "  .claude/settings.json exists — left unchanged, review it manually"
+else
+  sed -e "s|<toolkit_abs>|${TOOLKIT_ROOT}|g" -e "s|<toolkit>|${TOOLKIT_ROOT#/}|g" -e "s|<home>|${HOME#/}|g" \
+    "$T/settings.json" > "$PROJECT_ROOT/.claude/settings.json"
+  echo "  .claude/settings.json created"
+fi
+
+# ─── CLAUDE.md pointer ───
+if [[ -f "$PROJECT_ROOT/CLAUDE.md" ]]; then
+  echo "  CLAUDE.md exists — left unchanged"
+else
+  cp "$T/CLAUDE.md" "$PROJECT_ROOT/CLAUDE.md"
+  echo "  CLAUDE.md created"
+fi
+
+# ─── .gitignore ───
+if [[ -f "$PROJECT_ROOT/.gitignore" ]]; then
+  grep -q '^\.agentthon/runtime/' "$PROJECT_ROOT/.gitignore" || {
+    printf '\n' >> "$PROJECT_ROOT/.gitignore"
+    cat "$T/gitignore" >> "$PROJECT_ROOT/.gitignore"
+    echo "  .gitignore updated"
+  }
+else
+  cp "$T/gitignore" "$PROJECT_ROOT/.gitignore"
+  echo "  .gitignore created"
+fi
+
+# ─── git ───
+if [[ ! -d "$PROJECT_ROOT/.git" ]]; then
+  git -C "$PROJECT_ROOT" init -b main -q
+  git -C "$PROJECT_ROOT" add -A
+  git -C "$PROJECT_ROOT" commit -q -m "Initialise Agent-thon project"
+  echo "  git repo initialised on main"
+else
+  echo "  existing git repo kept — commit the new files on a branch and open a PR"
+fi
+
+echo ""
+echo "Done. Next:"
+echo "  bash $TOOLKIT_ROOT/scripts/validate.sh $PROJECT_ROOT"
+echo "  bash $TOOLKIT_ROOT/scripts/run-agent.sh architect $PROJECT_ROOT"

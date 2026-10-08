@@ -1,0 +1,74 @@
+{
+  "project_name": "",
+  "project_description": "",
+  "project_root": "",
+  "toolkit_root": "",
+  "created_at": "",
+  "mode": "new",
+  "profile": "pro",
+  "profiles": {
+    "pro": {
+      "models": {
+        "interactive": "sonnet",
+        "foreman": "sonnet",
+        "workers": "sonnet",
+        "reviewers": "sonnet",
+        "debug_deep": "sonnet",
+        "status": "haiku"
+      },
+      "parallel_workers": 1,
+      "review_mode": "combined",
+      "review_scope": "wave",
+      "fix_attempts": { "critical": 3, "standard": 2, "polish": 1 },
+      "debug_deep_iterations": 2,
+      "e2e_scope": "wave",
+      "eval_scope": "milestone"
+    },
+    "max": {
+      "models": {
+        "interactive": "opus",
+        "foreman": "opus",
+        "workers": "sonnet",
+        "reviewers": "sonnet",
+        "debug_deep": "opus",
+        "status": "haiku"
+      },
+      "parallel_workers": 3,
+      "review_mode": "separate",
+      "review_scope": "task",
+      "fix_attempts": { "critical": 5, "standard": 3, "polish": 2 },
+      "debug_deep_iterations": 3,
+      "e2e_scope": "wave",
+      "eval_scope": "wave"
+    }
+  },
+  "overflow": { "mode": "switch-account" },
+  "git": {
+    "main_branch": "main",
+    "wave_branch_prefix": "agentthon/wave-",
+    "task_branch_prefix": "agentthon/task-",
+    "github_repo": ""
+  },
+  "checks": {
+    "_comment": "Filled by the Architect once the stack is chosen. gate.sh runs these commands from the project root.",
+    "lint": [],
+    "types": [],
+    "unit": [],
+    "e2e": []
+  },
+  "deploy": {
+    "_comment": "Filled by the Architect. Deploys happen from main only.",
+    "target": null,
+    "services": [],
+    "health_checks": []
+  },
+  "hackathon": {
+    "start": null,
+    "end": null,
+    "demo_length_minutes": 3,
+    "demo_freeze_hours_before_end": 3
+  },
+  "foreman": {
+    "stall_timeout_minutes": 10
+  }
+}

@@ -1,0 +1,18 @@
+# Agent-thon runtime (local to each machine; the rest of .agentthon/ is shared)
+.agentthon/runtime/
+
+# Environment and secrets
+.env
+.env.*
+secrets/
+
+# Dependencies and builds
+node_modules/
+__pycache__/
+.venv/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db

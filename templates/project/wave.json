@@ -1,0 +1,27 @@
+{
+  "_comment": "Written by the Architect (append-only once released). The Foreman ingests it into runtime/state.json and owns all status from then on.",
+  "wave": 1,
+  "title": "FILL_IN: short name, e.g. Walking skeleton",
+  "goal": "FILL_IN: what the demo can show once this wave is merged",
+  "released_at": "FILL_IN: ISO 8601",
+  "milestone": false,
+  "eval_required": false,
+  "ui_freeze_ref": "FILL_IN: path to the frozen UI spec / wireframes for this wave, or null",
+  "tasks": {
+    "task-001": {
+      "title": "FILL_IN",
+      "type": "implementation",
+      "assigned_to": "FILL_IN: builder-api | builder-extraction | builder-ai-integration | builder-ui | builder-composer | builder-infra",
+      "size": "S",
+      "depends_on": [],
+      "owns_files": ["FILL_IN: exact paths this task creates/modifies — all must be agents-owned in ownership.yml"],
+      "reads": ["FILL_IN: files/context packs the worker must read"],
+      "tags": ["FILL_IN: any of api, extraction, ai, domain, ui, infra, security"],
+      "spec_file": "waves/wave-1/task-specs/task-001.md"
+    }
+  },
+  "wave_tests": {
+    "integration": "FILL_IN: what the integration test must prove",
+    "e2e": ["FILL_IN: user flows from screens.json / demo script"]
+  }
+}
