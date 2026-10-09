@@ -3,7 +3,7 @@
 A project-agnostic multi-agent coding toolkit for hackathons and short team builds, derived from Agents-max.
 You talk to the **Architect** and the **Prototyper**; the **Foreman** builds, reviews, tests and opens PRs without supervision.
 
-Full design: [PLAN.md](PLAN.md). Build status: phases A–E done, F (dry run) in progress, agent home + split phase added. Eval tester and extras come in phase G.
+Full design: [PLAN.md](PLAN.md). Playbooks: `playbooks/` (library discovery, visual quality, text → structured). Build status: phases A–E done, F (dry run) in progress, agent home + split phase added. Eval tester and extras come in phase G.
 
 ## Two folders per project
 
@@ -20,11 +20,11 @@ Nothing from Agent-thon is ever committed to the product repo. The only thing th
 
 1. **Architect, phase 0** — interview + challenge → `artifacts/brief.md`
 2. **Architect, phase 1: Split & Contracts** — product layout, chunks with owners (people or `agents`), contracts + examples, contract review, freeze → **contracts PR** in the product repo. Merge it: everyone starts building their chunk independently.
-3. **Prototyper** (in parallel from phase 0) — wireframes, `screens.json`, "UI frozen for wave N"
+3. **Prototyper** (in parallel from phase 0, the team's designer) — use cases, visual direction, **design system** (UI kit chosen with GitHits + tokens, frozen with the contracts), hi-fi prototypes, "UI frozen for wave N"
 4. **Architect, phase 2** — libraries, conventions, checks, domain rules, context packs for the agent chunks
 5. **Architect, phase 3** — plans wave N for the agent chunks; "release wave N" → **plan PR in the agent home repo**
 6. **Merge the plan PR** → wave released
-7. **Foreman** — builds, reviews, tests the wave in product-repo worktrees → **wave PR in the product repo**
+7. **Foreman** — builds, polishes the UI (screenshots vs prototypes), reviews, tests the wave in product-repo worktrees → **wave PR in the product repo**
 8. **Merge the wave PR** → deploy from `main`
 
 ## Quick start
@@ -74,9 +74,10 @@ bash scripts/profile.sh <project> default max  # shared default in config.json (
 | Agent | Started by | Role files |
 |---|---|---|
 | Architect | you (`run-agent.sh architect`) | `agents/architect/` (+ task-decomposer) |
-| Prototyper | you (`run-agent.sh prototyper`) | `agents/prototyper/` (+ wireframer, flow-mapper) |
+| Prototyper | you (`run-agent.sh prototyper`) | `agents/prototyper/` (+ wireframer for prototypes, flow-mapper) |
 | Foreman | you (`run-agent.sh foreman`) | `agents/foreman/AGENT.md`, `worker-contract.md` |
 | Builders | Foreman | `workers/builder-{infra,api,extraction,ai-integration,ui,composer}.md` |
+| UI polish | Foreman (once per wave with UI) | `workers/ui-polish.md` |
 | Fixers | Foreman | `workers/bug-fixer.md`, `debugger-quick.md`, `debugger-deep.md` |
 | Reviewers | Foreman | `workers/reviewer-{code,security,domain,ui,combined}.md` + `checklists/` |
 | Testers | Foreman | `workers/tester-{integration,e2e}.md` |
@@ -115,7 +116,9 @@ bash scripts/run-agent.sh foreman <project> resume
 | `check-wave.py` | deterministic wave validation (layout, ownership, claims, overlaps, deps, specs, contracts) |
 | `allow-domain.sh` | add approved network domains (`config.network.allowed_domains`) |
 | `foreman.py` | Foreman mechanics: plan refresh, waves, tasks, worktrees, merges, PRs, questions, status |
-| `gate.sh` | config-driven checks + exact versions + ownership/layout check |
+| `gate.sh` | config-driven checks + exact versions + design tokens + ownership/layout check |
+| `check-design.py` | flag raw colours / palette classes in agent-built UI outside the theme files |
+| `screenshots.sh` | render app screens + prototypes to PNGs (`config.design.screenshots`) for polish and UI review |
 | `ownership-check.py` | ownership, claims, layout and contracts rules for a worktree |
 | `check-versions.py` | reject `^`, `~`, ranges in package.json / requirements |
 | `smoke.sh` | health checks after deploy |
@@ -128,7 +131,8 @@ bash scripts/run-agent.sh foreman <project> resume
   chunks.json        the split: chunks, owners, paths, provides/consumes      → ownership.yml (generated)
   claims.md  requests.md  TEAM.md
   contracts/         source of truth (+ examples/<name>/) → published to <repo>/<contracts_dir>/
-  artifacts/         brief, architecture, conventions, domain, kickoff, context/, ui/
+  artifacts/         brief, architecture, conventions, domain, kickoff, context/,
+                     ui/ (use cases, design system + tokens.css, prototypes, screens.json, hero data)
   waves/wave-N/      wave.json + task-specs/ (released by merging a plan PR)
   evals/decisions.md
   runtime/           local only: state, lock, status, plan/ (released plan), worktrees/, results/, settings

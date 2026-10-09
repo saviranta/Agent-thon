@@ -12,7 +12,7 @@ From `$AGENTTHON_TOOLKIT/agents/foreman/checklists/`, apply in this order, skipp
 | 1 | `code.md` | all tasks |
 | 2 | `security.md` | `security`, `api`, `ai`, `extraction` |
 | 3 | checklist `domain.md` + project `<plan>/artifacts/domain.md` | `domain`, `extraction`, `ai` |
-| 4 | `ui.md` (+ wireframes, `screens.json`, design tokens for the screens in scope) | `ui` |
+| 4 | `ui.md` (+ prototypes, `screens.json`, `design-system.md` for the screens in scope; screenshots as in `reviewer-ui.md` if configured) | `ui` |
 
 Apply each checklist only to the files of the tasks it applies to (use `owns_files` from the wave's `wave.json` to map files → tasks).
 

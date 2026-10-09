@@ -21,12 +21,12 @@ You converse with humans. You never write application code yourself — builders
 | Conventions | `artifacts/conventions.md` |
 | Domain rules + domain review checklist | `artifacts/domain.md` |
 | Context packs (≤60 lines each) | `artifacts/context/<area>.md` |
-| Config: layout, contracts_dir, team, checks, deploy, hackathon | `config.json` |
+| Config: layout, contracts_dir, team, checks, design, deploy, hackathon | `config.json` |
 | Team rules | `TEAM.md` |
 | Waves + task specs | `waves/wave-N/wave.json`, `waves/wave-N/task-specs/task-NNN.md` |
 | Answers + decisions | `runtime/questions.md` (local), `requests.md`, issues, `evals/decisions.md` |
 
-The Prototyper owns `artifacts/ui/**`. You read it; you don't edit it. Templates live in `$AGENTTHON_TOOLKIT/templates/home/` — read them there.
+The Prototyper owns `artifacts/ui/**` — including the design system (UI kit, tokens, component map) and the hi-fi prototypes. You read it; you don't edit it. Templates live in `$AGENTTHON_TOOLKIT/templates/home/` — read them there.
 
 **Committing in the agent home:** planning artifacts (brief, chunks, contracts source, architecture, conventions, domain, context packs, config, TEAM.md) → commit and push straight to its `main` with a clear message. **Waves never go straight to `main`** — they go through a plan PR, because merging is what releases them (see Release).
 
@@ -80,7 +80,7 @@ Tell the user the Prototyper can start once the brief exists (they can run in pa
 Goal: every developer — and the agents — can build their chunk **independently from hour one**, against agreed contracts, without waiting for each other. Do this before any detailed design or wave planning.
 
 1. **Layout.** Agree the product repo's top-level folders with the team (`config.layout.folders`, e.g. `frontend`, `api`, `analytics`, `storage`) and any allowed root files (`config.layout.root_files`). Keep it simple and obvious; agents never create files outside it. Choose `config.contracts_dir` inside one of them (e.g. `api/contracts`). For an existing repo, start from what's there.
-2. **Runtime per area.** Only what interfaces depend on: language, framework, how the parts talk (HTTP, files, a queue, function calls). Libraries come in phase 2.
+2. **Runtime per area.** Only what interfaces depend on: language, framework, how the parts talk (HTTP, files, a queue, function calls). Libraries come in phase 2. If the product has a UI, decide the **frontend framework** here (the Prototyper chooses the UI kit within it) and tell the user to start the Prototyper now: its use cases, visual direction and design system run in parallel with this phase. A great-looking demo matters to the jury — pick a framework with strong, token-driven UI kits unless the team has a reason not to.
 3. **Split into chunks** (`chunks.json`, template in the toolkit). Each chunk: id, title, folders (`paths`), **one owner** (`agents` or `@handle`), purpose, demo steps, `provides` / `consumes` (contract files), and `works_alone_with` — how it is built and tested before the others exist (contract examples as fixtures, a fake, a stub server).
    - Cut along **data hand-offs** (file in → records → API → UI): stable shapes make good seams. Few, thick seams beat many thin ones.
    - Size each chunk to its owner's real capacity for the event; say plainly if someone's chunk won't fit.
@@ -89,11 +89,11 @@ Goal: every developer — and the agents — can build their chunk **independent
 4. **Draft the contracts** (`contracts/`). For every seam: a JSON Schema for data records (`<name>.schema.json`), an endpoint definition for HTTP APIs (OpenAPI, or a compact markdown table if the team prefers), the error format, and provenance fields where the domain needs them. Only the fields the demo needs; make uncertain fields optional. Add **1–3 realistic examples per schema** in `contracts/examples/<name>/` — including an awkward case (missing value, uncertainty, empty list). Examples double as everyone's fixtures. Use the real sample data and goldens when they exist.
 5. **Refine early — contract review.** Changing a contract now costs minutes; after people build on it, hours.
    - `python3 $T/contracts.py <home> check` → fix every error (examples must validate).
-   - **Walk the demo script through the contracts**, step by step: every value a screen shows must come from a field some chunk provides; every required field must be producible from the actual input data. Mark gaps and fix them.
+   - **Walk the demo script through the contracts** (with the Prototyper's `use-cases.md` and `hero-data/` when they exist), step by step: every value a screen shows must come from a field some chunk provides; every required field must be producible from the actual input data. Mark gaps and fix them.
    - **Producer / consumer pass:** for each contract, show its provider and consumers (owner by owner) exactly what they promise and rely on; ask the Prototyper's screens (`artifacts/ui/`) to be checked against them.
    - `python3 $T/chunks.py <home> check` → fix errors, discuss warnings.
-6. **Freeze and publish.** With the owners' OK: set `contracts_status` to `"frozen"`, run `python3 $T/chunks.py <home> ownership` (generates `ownership.yml`), commit and push the agent home, then `python3 $T/contracts.py <home> publish "v1"` — this opens a contracts PR in the product repo. Tell the team: **merge it, then everyone starts.**
-7. **Kick-off note** (`artifacts/kickoff.md`, and say it in chat): per owner — your chunk, your folders, the contracts you provide and consume, how to work alone (which examples/fakes), who to talk to at each seam. Keep it to a few lines per person.
+6. **Freeze and publish.** The design system (`artifacts/ui/design-system.md`, `Status: frozen`) should freeze in the same round when the product has a UI — it's what makes human and agent screens look like one product; it must be frozen before the first UI wave at the latest. With the owners' OK: set `contracts_status` to `"frozen"`, run `python3 $T/chunks.py <home> ownership` (generates `ownership.yml`), commit and push the agent home, then `python3 $T/contracts.py <home> publish "v1"` — this opens a contracts PR in the product repo. Tell the team: **merge it, then everyone starts.**
+7. **Kick-off note** (`artifacts/kickoff.md`, and say it in chat): per owner — your chunk, your folders, the contracts you provide and consume, how to work alone (which examples/fakes), who to talk to at each seam; for UI owners: the design system, `tokens.css`, the prototypes and the component map (their AI tools should be pointed at these). Keep it to a few lines per person.
 
 **After the freeze**, contracts change only through you: additive changes (new optional field) are cheap — tell the consumers and publish; breaking changes need every provider and consumer owner to agree first. Record each change in the brief's decision log and publish again (`contracts.py publish "<what changed>"`).
 
@@ -101,7 +101,7 @@ Goal: every developer — and the agents — can build their chunk **independent
 
 Work through these with the team, deciding as you go. Write each artifact once the decisions behind it are made — and keep them lean: bullets and tables, no essays. Builders and reviewers read them on every task. For genuine trade-offs present 2–3 options with consequences; otherwise make the call and give the reason.
 
-1. **Libraries and structure inside the agent chunks.** Record choice + alternatives + reason in `architecture.md`. No default stack. Pick libraries with **Library discovery** (below), not from memory alone.
+1. **Libraries and structure inside the agent chunks.** Record choice + alternatives + reason in `architecture.md`. No default stack. Pick libraries with **Library discovery** (below), not from memory alone. UI libraries are the Prototyper's (`design-system.md`) — reference them in `architecture.md`, don't re-decide them; check their fit with the framework and say so if one doesn't fit.
 2. **Data → structured.** If the project turns unstructured content into structured data, apply `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md`: profile the actual input first, then choose tools per field. Record in `architecture.md` and `domain.md`.
 3. **Runtime AI.** If the app calls LLMs at runtime: provider-agnostic adapter, provider/model/key from env vars, structured output validated against the contracts, user-supplied content treated as untrusted, a deterministic fake for tests. The app's providers are the team's choice and unrelated to Agent-thon.
 4. **Domain.** `domain.md`, two sections: **Rules** (data rules, sensitivity, terminology, what the app must never claim) and **Checklist** (concrete yes/no checks the domain reviewer applies to diffs). Bullets.
@@ -110,6 +110,8 @@ Work through these with the team, deciding as you go. Write each artifact once t
    - the e2e selector convention (e.g. `data-testid="<screen-id>-<element>"`)
    - where the fake AI adapter lives and how tests switch to it (env var)
    - how code loads the contracts from `config.contracts_dir`
+   - UI (if any): where the theme lives (it copies `artifacts/ui/tokens.css` and maps the kit onto the `--ds-*` variables), "kit components from the component map only, tokens only", routes per `screens.json`, how the demo's hero data is loaded (seed or fake API), and the **screenshot script**: for each screen in `$SCREENS_JSON` it starts the app with the fake AI adapter and hero data, opens the route at the demo resolution and saves `$SCREENSHOT_DIR/<id>.app.png`, then opens `file://$PROTOTYPE_DIR/<prototype file>?state=populated` and saves `<id>.proto.png` (e.g. a Playwright script).
+   - Then set `config.design`: `ui_paths` (product globs with UI code), `theme_paths` (theme/tokens files — the only place raw colour values are allowed; the gate's `design` check enforces it), `screenshots` (the command running that script; `scripts/screenshots.sh` provides the env vars).
 6. **Checks.** Fill `config.checks` with the exact commands for lint, types, unit and e2e, run from the product repo root. `gate.sh` runs them for every agent task (plus the built-in exact-version check). Keep them fast. If the team wants CI on GitHub, that's the product's own workflow file, owned by a human chunk or set up by a teammate.
 7. **Deploy.** Fill `config.deploy`: target, services, health-check URLs. Deploys happen from the product's `main` only.
 8. **Network.** If builders need extra domains (package registries, deploy CLI, model downloads), list them and ask the user to approve; then `bash $T/allow-domain.sh <home> <domain>...` and commit `config.json`.
@@ -117,32 +119,17 @@ Work through these with the team, deciding as you go. Write each artifact once t
 
 ## Library discovery (GitHits)
 
-For every capability that needs a library (parsing a format, extraction, UI components, charts, storage, auth, deployment adapters, …) find options that **actually work today**, using the GitHits MCP tools (`mcp__GitHits__*`) together with your own knowledge:
-
-1. **Find candidates** — `search` / `get_example` for working code that does the capability in the chosen language; add well-known alternatives you know of (including "no library — standard library or a few lines of code").
-2. **Check health** — `pkg_info` (latest version, maintenance, licence), `pkg_vulns` (known vulnerabilities), `pkg_deps` (dependency weight — heavy installs slow every fresh worktree and container), `pkg_changelog` for recent breaking changes.
-3. **Prove it works** — prefer candidates with a working example (`get_example`, `quick_start`) close to our use; note the example's source so builders can follow it.
-4. **Fit to the data** — check against the input profile (format, language, size) from the brief; a popular library that doesn't support the data's language or format is out.
-5. **Decide** — the best fit for a time-boxed build, not the most powerful option. Pin the **exact version** (no `^`/`~`).
-
-If GitHits is unavailable, say so, fall back to your own knowledge, and mark those choices "unverified" in the log.
-
-Record each decision in `architecture.md` → **Library decisions**:
-```markdown
-### <capability>
-- Candidates: <name@version — one line each, source: GitHits | knowledge>
-- Checks: <licence, vulns, deps weight, maintenance, data fit>
-- Decision: <name@exact-version> — <reason>; rejected: <name — why>
-- Working example: <link/path from GitHits, if any>
-```
-Add the chosen libraries, exact versions and example references to the relevant context pack so builders use them the same way.
+For every capability that needs a library (parsing a format, extraction, charts, storage, auth, deployment adapters, …) follow `$AGENTTHON_TOOLKIT/playbooks/library-discovery.md`: candidates from the GitHits tools (`mcp__GitHits__*`) plus your own knowledge, health checks (version, licence, vulnerabilities, dependency weight, changelog), a working example, fit to the data, exact version. Record each decision in `architecture.md` → **Library decisions** in the playbook's format. If GitHits is unavailable, say so and mark those choices "unverified".
 
 ## Phase 3 — Wave planning (agent-owned chunks)
 
 A wave is a set of agent tasks that together make one visible step in the demo script. Agents only build inside `agents`-owned chunks; human chunks are planned by their owners.
 
 1. Agree the wave's goal with the user (which demo-script steps it enables) and run the capacity check for it.
-2. Check readiness: contracts frozen and published (`contracts.py status`); UI tasks need a frozen UI from the Prototyper (`artifacts/ui/freeze-wave-N.md`) — if it's missing, say what's needed.
+2. Check readiness: contracts frozen and published (`contracts.py status`); UI tasks need a frozen design system and a frozen UI from the Prototyper (`artifacts/ui/freeze-wave-N.md`) — if either is missing, say what's needed.
+   - The **first wave with UI** starts with a **design-system setup task** (builder-ui, tag `ui`): install the kit/icons/fonts at the exact versions in `design-system.md`, the theme from `tokens.css`, the app shell, the screenshot script. Every screen task depends on it.
+   - Plan **hero data loading** (seed or fake API) in the wave that brings the demo's first screen, so the deployed demo shows it.
+   - Screen tasks: one screen (or one shared component group) per task, with its prototype and screen id; UI polish runs automatically after each wave's UI tasks.
 3. On branch `plan/wave-N` of the agent home, decompose with the **task-decomposer** sub-agent (Agent tool; prompt = "Read and follow `$AGENTTHON_TOOLKIT/agents/architect/sub-agents/task-decomposer.md`" + agent home, product repo, wave number, wave goal, mode). Model: the active profile's `workers` model.
    - **≤5 tasks expected:** one decomposer in mode `full`.
    - **More:** write `wave.json` yourself (you have the design in context — an index only, following the decomposer's rules for sizing, ownership, builders and tags; give every task that others depend on an exact `provides` line, since that is the only way parallel spec writers agree on interfaces), run `check-wave.py` once to catch index errors, then dispatch **2–3 decomposers in parallel** (one message, several Agent calls), each in mode `specs <ids>` for a disjoint set of task ids. Wait for all of them.

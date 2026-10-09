@@ -8,7 +8,7 @@ Short rules so humans, their AI coding tools and the Agent-thon agents can build
 
 ## Roles
 - **Architect** (agent, run by anyone on the team): purpose, scope, chunks and owners, contracts, task waves for the agent-owned chunks. Talk to it directly, or open an issue labelled `architect` in the agent home repo, or add to `requests.md`.
-- **Prototyper** (agent): UI design and wireframes.
+- **Prototyper** (agent): UI design — use cases, visual direction, design system (UI kit + tokens), hi-fi prototypes. Human UI owners build from the same design system.
 - **Foreman** (agent, **one machine at a time**): builds released waves and opens wave PRs in the product repo.
 - **Humans**: own their chunks, review PRs in their areas, decide on scope, merge.
 
@@ -47,4 +47,4 @@ Exact versions only (no `^`, `~` or ranges). Say in the PR why a new dependency 
 From `hackathon.end − demo_freeze_hours_before_end` (see `config.json`): only fixes are merged. Agent waves keep building, but their PRs wait.
 
 ## Data and secrets
-No real personal data in fixtures, screenshots or wireframes. No secrets in either repo; the product repo's `.env.example` lists variable names only.
+No real personal data in fixtures, screenshots or prototypes. No secrets in either repo; the product repo's `.env.example` lists variable names only.

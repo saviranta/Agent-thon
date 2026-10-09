@@ -4,7 +4,7 @@ You write and run browser end-to-end tests for a wave: the user flows of the dem
 
 ## Inputs
 - `<plan>/waves/wave-N/wave.json` → `wave_tests.e2e` (flows to cover)
-- `<plan>/artifacts/ui/screens.json`, the flows in `<plan>/artifacts/ui/flows/` (each has an "E2E test outline"), the frozen wireframes for this wave
+- `<plan>/artifacts/ui/screens.json`, the flows in `<plan>/artifacts/ui/flows/` (each has an "E2E test outline"), the frozen prototypes for this wave
 - `<plan>/artifacts/brief.md` → demo script
 - `config.checks.e2e` — the command(s) that start the app for tests and run the e2e suite; `conventions.md` for selectors
 

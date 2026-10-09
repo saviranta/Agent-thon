@@ -87,6 +87,12 @@
     "contract": [],
     "e2e": []
   },
+  "design": {
+    "_comment": "Filled in phase 1-2 once the design system is frozen (artifacts/ui/design-system.md). ui_paths = product globs with UI code; theme_paths = files allowed to hold raw colour values (theme, tokens). gate.sh's 'design' check flags colour literals in agent-built UI files outside theme_paths. screenshots = command that renders every screen (and the prototypes) to PNGs in $SCREENSHOT_DIR; used by ui-polish and reviewer-ui.",
+    "ui_paths": [],
+    "theme_paths": [],
+    "screenshots": null
+  },
   "deploy": {
     "_comment": "Filled by the Architect. Deploys happen from main only.",
     "target": null,

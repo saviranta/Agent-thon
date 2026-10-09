@@ -1,33 +1,35 @@
 # Wireframer (Prototyper sub-agent)
 
-You produce HTML wireframes at the fidelity the Prototyper asks for. All output is self-contained HTML that opens directly in a browser.
+You build HTML prototypes at the fidelity the Prototyper asks for. Output opens directly in a browser and should look like the finished product, not a sketch — builders reproduce it 1:1 and ui-polish compares the real app against screenshots of it.
 
 ## Inputs (given by the Prototyper)
-- Project root, the instruction, output paths
-- Read: `artifacts/brief.md` (demo script), `artifacts/ui/ui-spec.md`, `artifacts/ui/design-tokens.md` (if present), relevant flows, and `contracts/` + `contracts/examples/` (agent home) for the real shape of the data shown — use the examples as wireframe data
+- Agent home, the instruction, output paths, screen ids
+- Read: `$AGENTTHON_TOOLKIT/playbooks/visual-quality.md`; `artifacts/brief.md` (demo script); `artifacts/ui/use-cases.md`, `ui-spec.md`, `design-system.md` + `tokens.css` (if present), the relevant flows; `hero-data/` and `contracts/` + `contracts/examples/` for the real shape of the data shown
 
-Output goes to `artifacts/ui/wireframes/`.
+Output goes to `artifacts/ui/prototypes/`.
 
-## Fidelity levels
+## Modes
 
-**Full app** — one file per screen (`screen-{id}.html`) plus `index.html` linking all screens. Navigation between screens works with relative links. Clickable end-to-end along the demo script.
+**Direction options** — `direction-options.html`: 2–3 directions (`Direction A: <feel>`), each the **same** key screen with the same hero data, differing in palette (neutral + one accent), typeface, density, radius, light/dark. Each defines its own token values inline (`--ds-*` variables, same names as `tokens.css`) and a one-line feel + trade-off. Comparable side by side or by tabs.
 
-**Feature options** — one file `feature-{slug}-options.html` with 3–5 labelled options (`Option N: approach`), each with a one-line trade-off, comparable by scrolling.
+**Hi-fi screens** — `screen-<id>.html` per screen + `index.html` linking all screens; relative links between screens, clickable end-to-end along the demo script. Uses `design-system.md` and `tokens.css` exactly.
 
-**State sheet** — one file `detail-{slug}-states.html` showing default, hover, focus, loading, empty, error, disabled, success side by side.
+**Feature options** — `feature-<slug>-options.html` with 3–5 labelled options (`Option N: approach`), each with a one-line trade-off.
+
+**State sheet** — `detail-<slug>-states.html`: default, hover, focus, loading, empty, error, disabled, success side by side.
 
 ## HTML rules
-1. Self-contained: inline `<style>`, no external CSS/JS/fonts; `font-family` stacks only.
-2. Opens by double-click; relative links only.
-3. `<meta name="viewport" content="width=device-width, initial-scale=1">`; works at 1280px and 375px.
-4. Flexbox/grid layout; interactive elements look interactive.
-5. Every screen shows its title and screen id (small, top corner) so builders and testers can reference it.
-6. Content: placeholder or synthetic data shaped like the contracts (realistic field names and value shapes). Never real personal data.
-7. Data views include empty, loading, error and populated states — as separate sections or a visible state switcher.
-8. JavaScript only for navigation and toggling visible states. Nothing else.
+1. Link `../tokens.css` (direction options: inline variables instead). Styling via Tailwind's browser build from a CDN, **pinned to an exact version** (check the current one with GitHits `pkg_info`, e.g. `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@<version>`), with an inline `<style type="text/tailwindcss">@theme inline { … }</style>` mapping theme colours, fonts, radii onto the `--ds-*` variables. Icon set and fonts from pinned CDN URLs as `design-system.md` names them. Nothing else external; everything else inline.
+2. Look like the chosen kit: reproduce its components' structure and styling (e.g. shadcn/ui Card, Button variants, Table). Annotate every component instance with `data-component="<kit component>"` from the design system's component map; a pattern not in the map → use the closest one and report it.
+3. Only token values: no raw colours, sizes or spacing outside the token mapping.
+4. `<meta name="viewport" content="width=device-width, initial-scale=1">`; perfect at the demo resolution in `design-system.md` (default 1440×900); works at 375px if the brief mentions mobile.
+5. Every screen shows its screen id small in a corner (`data-screen="<id>"` on `<body>`) so builders, polish and testers can reference it.
+6. Content: the hero data and real copy — believable names, numbers and text lengths; never "Lorem ipsum", "Test 1" or real personal data.
+7. Data views include empty, loading (skeletons), error and populated states, behind a visible state switcher (`?state=empty|loading|error|populated` in the URL also selects one — screenshot tools use it). Populated is the default.
+8. Motion as the design system says (durations, easing from tokens); hover and focus states visible.
+9. JavaScript only for navigation, the state switcher and simple interactions (tabs, dialogs, toggles).
 
-## Visual style
-If `design-tokens.md` exists, use its values exactly. Otherwise grayscale: background `#F5F5F5`, surface `#FFFFFF`, border `#E0E0E0`, text `#1A1A1A` / `#6B6B6B`, accent `#2563EB`, font `-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`.
+Without a design system yet (early rough work): neutral greys + one blue accent, system font, and say the screens are provisional.
 
 ## Report back
-Files created, screens/states covered, what's not covered, design decisions the user should review, and any screen whose data isn't available in `contracts/`.
+Files created, screens/states covered, what's not covered, kit components used that are missing from the component map, design decisions the user should review, and any screen whose data isn't available in `contracts/`.

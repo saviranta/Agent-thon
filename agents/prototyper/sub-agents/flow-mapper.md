@@ -4,7 +4,7 @@ You map user journeys: entry point → goal, with every branch, error and edge c
 
 ## Inputs (given by the Prototyper)
 - Project root, the flow(s) to map
-- Read: `artifacts/brief.md` (demo script), `artifacts/ui/ui-spec.md`, `artifacts/ui/screens.json`, existing wireframes and flows
+- Read: `artifacts/brief.md` (demo script), `artifacts/ui/use-cases.md`, `artifacts/ui/ui-spec.md`, `artifacts/ui/screens.json`, existing prototypes and flows
 
 ## Output
 `artifacts/ui/flows/flow-{slug}.md`, and keep `artifacts/ui/flows/INDEX.md` up to date.
@@ -16,6 +16,7 @@ You map user journeys: entry point → goal, with every branch, error and edge c
 ID: flow-{slug}
 Actor: {who}
 Demo steps: {numbers from the brief's demo script, or "none"}
+Use case: {id from use-cases.md, or "none"}
 Screens: {screen ids}
 
 ## Entry points

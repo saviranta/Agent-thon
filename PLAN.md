@@ -7,6 +7,8 @@ The team converses with two agents (Architect, Prototyper); an autonomous Forema
 
 **No project specifics in the toolkit.** Stack, libraries, data formats, domain rules and schemas are decided per project by the Architect with the team and stored in that project's agent home. The toolkit ships methods, checklists and playbooks — not choices.
 
+**Design (Revision 3).** A demo that looks great is a primary goal. The Prototyper is the team's designer (no separate design agent): (1) use cases per demo step with hero data and a wow moment, (2) 2–3 visual directions on the opening screen, (3) UI kit, icons, charts, fonts chosen with `playbooks/library-discovery.md` (GitHits) → `design-system.md` (component map) + `tokens.css` (`--ds-*` CSS variables), frozen alongside the contracts, (4) hi-fi prototypes on the chosen kit's look (Tailwind CDN + tokens, `data-component` annotations, `?state=` switcher), (5) freeze per wave. Build side: the first UI wave starts with a design-system setup task (kit, theme from `tokens.css`, app shell, screenshot script); builder-ui reproduces prototypes 1:1 with kit components and tokens; the gate's built-in `design` check flags raw colours / palette classes outside `config.design.theme_paths`; after each wave's UI tasks the Foreman runs one `ui-polish` worker (screenshots app vs prototype via `scripts/screenshots.sh`, fixes visual gaps within the UI tasks' files, leftovers → known issues); reviewer-ui compares screenshots too. Guidance for all of them: `playbooks/visual-quality.md`.
+
 ---
 
 ## 0. Revision 2 — agent home + Split & Contracts phase (supersedes parts of §2, §4, §5, §12)
@@ -20,7 +22,7 @@ The team converses with two agents (Architect, Prototyper); an autonomous Forema
 - Teammates clone both repos side by side; `TEAM.md`, claims and requests live in the agent home. Their own AI tools don't see the agent home; the kick-off note tells each person what their tool must follow.
 
 **Architect phases.** 0 Brief & Challenge → **1 Split & Contracts** (new) → 2 Design (agent chunks) → 3 Wave planning (agent chunks).
-Phase 1: agree the layout; runtime per area; split into chunks (`chunks.json`: owner `agents` or `@handle`, paths, provides/consumes, works_alone_with); draft contracts with 1–3 realistic examples each; contract review (`contracts.py check`, demo walk-through, producer/consumer pass with owners, Prototyper check); freeze + publish; kick-off note per owner. After the freeze: additive changes are announced and republished; breaking changes need every affected owner's agreement. `chunks.py` validates the split and generates `ownership.yml`.
+Phase 1: agree the layout; runtime per area (incl. the frontend framework); split into chunks (`chunks.json`: owner `agents` or `@handle`, paths, provides/consumes, works_alone_with); draft contracts with 1–3 realistic examples each; contract review (`contracts.py check`, demo walk-through, producer/consumer pass with owners, Prototyper check); freeze + publish (with the design system when there is a UI); kick-off note per owner. After the freeze: additive changes are announced and republished; breaking changes need every affected owner's agreement. `chunks.py` validates the split and generates `ownership.yml`.
 
 ---
 
@@ -490,3 +492,4 @@ GitHub: toolkit is a local git repo; a private GitHub repo is created after Phas
 | Architect speed | specs capped ~60 lines / 3,500 chars and point to contracts/context packs (check-wave warns); wave.json is an index; >5 tasks → Architect writes wave.json, 2–3 spec writers in parallel, agreeing on interfaces through each task's `provides` line; one `domain.md` (Rules + Checklist); context packs ≤60 lines, only for areas the next wave needs; replies ≤10 lines by default |
 | Agent home | product repo holds product code only; everything Agent-thon lives in `<repo>-agents/` (own private repo); plan PRs there, wave + contracts PRs in the product repo; enforcement in the local gate instead of CI |
 | Split & Contracts phase | new Architect phase 1 before detailed design: chunks with one owner each, contracts + examples reviewed and frozen early, published by contracts PR so people and agents build independently |
+| Visual quality | Prototyper doubles as designer (use cases, direction, design system on a real UI kit picked via GitHits, hi-fi prototypes); tokens shared by prototypes and product; gate `design` check; one ui-polish pass per wave with screenshot comparison — no separate design agent, to keep one conversation for UX + look |

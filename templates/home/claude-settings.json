@@ -4,8 +4,15 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "filesystem": {
-      "allowRead": ["/<home_dir>", "/<repo_dir>", "/<toolkit_dir>"],
-      "allowWrite": ["/<home_dir>", "/<repo_dir>"],
+      "allowRead": [
+        "/<home_dir>",
+        "/<repo_dir>",
+        "/<toolkit_dir>"
+      ],
+      "allowWrite": [
+        "/<home_dir>",
+        "/<repo_dir>"
+      ],
       "denyRead": [
         "/<user_home>/.ssh",
         "/<user_home>/.aws",
@@ -26,7 +33,12 @@
         "*.npmjs.org",
         "registry.yarnpkg.com",
         "pypi.org",
-        "files.pythonhosted.org"
+        "files.pythonhosted.org",
+        "cdn.jsdelivr.net",
+        "unpkg.com",
+        "cdn.tailwindcss.com",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com"
       ]
     }
   },

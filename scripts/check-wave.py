@@ -168,6 +168,15 @@ def main():
             if shared and a not in ancestors(tasks, b) and b not in ancestors(tasks, a):
                 err(f"{a} and {b} can run in parallel but both own {sorted(shared)}")
 
+    if any(t.get("assigned_to") == "builder-ui" or "ui" in t.get("tags", []) for t in tasks.values()):
+        ds = os.path.join(project, "artifacts", "ui", "design-system.md")
+        if not os.path.exists(ds):
+            warn("UI tasks but no artifacts/ui/design-system.md — the Prototyper's design system should come first")
+        elif not re.search(r"^Status:\s*frozen", open(ds).read(), re.M):
+            warn("UI tasks but the design system is not frozen (artifacts/ui/design-system.md → Status: frozen)")
+        if not (load_config(project).get("design") or {}).get("ui_paths"):
+            warn("UI tasks but config.design.ui_paths is empty — the gate's design check won't run")
+
     chunks_path = os.path.join(project, "chunks.json")
     if not os.path.exists(chunks_path):
         warn("no chunks.json — phase 1 (Split & Contracts) hasn't happened")

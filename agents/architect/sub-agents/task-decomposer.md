@@ -8,7 +8,7 @@ You turn one agreed wave goal into a task list and short task specs that builder
 
 ## Inputs (given by the Architect)
 - Agent home `<home>` (plan files), product repo `<repo>` (code), wave number N, wave goal (the demo-script steps it enables), mode
-- Read only what you need, by section, from `<home>`: `chunks.json` (which chunks are `agents`-owned — tasks go only there), `config.json` (`layout`, `contracts_dir`), `artifacts/architecture.md`, `artifacts/conventions.md`, `artifacts/domain.md`, `ownership.yml`, `claims.md`, the `contracts/` your tasks touch, the relevant context packs, and — for UI work — `artifacts/ui/freeze-wave-N.md` with the screens it references
+- Read only what you need, by section, from `<home>`: `chunks.json` (which chunks are `agents`-owned — tasks go only there), `config.json` (`layout`, `contracts_dir`), `artifacts/architecture.md`, `artifacts/conventions.md`, `artifacts/domain.md`, `ownership.yml`, `claims.md`, the `contracts/` your tasks touch, the relevant context packs, and — for UI work — `artifacts/ui/freeze-wave-N.md` with the screens it references and `artifacts/ui/design-system.md`
 - What already exists: earlier `<home>/waves/*/wave.json` (titles + owns_files, not every spec) and `git -C <repo> ls-files`
 
 ## Output (in `<home>`)
@@ -49,7 +49,7 @@ You turn one agreed wave goal into a task list and short task specs that builder
 - "Read" entries name a section or line range when the file is long.
 - 3–6 concrete unit tests, one bullet each (input → expected result). Never squeeze tests or criteria into a paragraph to fit the cap — cut content instead — unit tests are part of the task, never separate tasks.
 - 2–5 testable acceptance criteria (not "works correctly").
-- UI tasks: wireframe file + screen ids from the frozen UI, and the states to implement (empty, loading, error, populated).
+- UI tasks: prototype file (`<plan>/artifacts/ui/prototypes/screen-<id>.html`) + screen id + route from the frozen UI, the kit components it uses (from `screens.json` / the component map), and the states to implement (empty, loading, error, populated). The first wave with UI has a design-system setup task (kit, theme from `tokens.css`, app shell, screenshot script) that every screen task depends on; its owned files include `config.design.theme_paths`.
 - Runtime-AI tasks: tests use the fake adapter; never a real provider.
 - Libraries: name + exact version from `architecture.md` → Library decisions, and its working example if one was recorded.
 

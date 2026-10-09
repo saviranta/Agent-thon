@@ -8,11 +8,12 @@
 #   <work-dir>   a product worktree (task, fix or the Foreman's wave worktree) or a checkout
 #   --task/--base  also run the ownership check for that task against <ref>
 #   --results    write gate.json + per-check logs there (default: <home>/runtime/gate-results)
-#   --only       comma-separated subset of: setup,lint,types,unit,contract,e2e,versions
-#                (default: setup,lint,types,unit,contract,versions)
+#   --only       comma-separated subset of: setup,lint,types,unit,contract,e2e,versions,design
+#                (default: setup,lint,types,unit,contract,versions,design)
 #
 # Check commands come from config.checks.<category> of the released plan (runtime/plan, else the agent
-# home) and run from <work-dir>. `versions` is built in (exact dependency versions, no ^ or ~).
+# home) and run from <work-dir>. Built in: `versions` (exact dependency versions, no ^ or ~) and `design`
+# (no raw colour values in agent-built UI files outside config.design.theme_paths; changed files only with --base).
 # Exit 0 = all passed, 1 = something failed, 2 = usage / no checks configured.
 
 set -uo pipefail
@@ -24,7 +25,7 @@ WORK_DIR="${2:-}"
 [[ -d "$WORK_DIR" ]] || { echo "Usage: gate.sh <project> <work-dir> [--task ids --base ref] [--results dir] [--only cats]" >&2; exit 2; }
 WORK_DIR="$(cd "$WORK_DIR" && pwd)"
 shift 2
-TASK="" BASE="" RESULTS="" ONLY="setup,lint,types,unit,contract,versions"
+TASK="" BASE="" RESULTS="" ONLY="setup,lint,types,unit,contract,versions,design"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --task) TASK="$2"; shift 2 ;;
@@ -40,20 +41,27 @@ PLAN="$H"
 [[ -f "$H/runtime/plan/config.json" ]] && PLAN="$H/runtime/plan"
 CONFIG="$PLAN/config.json"
 
-# Emit "category<TAB>command" lines for the selected categories (versions = built in).
-COMMANDS="$(GATE_CONFIG="$CONFIG" GATE_ONLY="$ONLY" GATE_SCRIPTS="$SCRIPTS" python3 -c '
-import json, os
-checks = json.load(open(os.environ["GATE_CONFIG"])).get("checks", {})
-scripts = os.environ["GATE_SCRIPTS"]
+# Emit "category<TAB>command" lines for the selected categories (versions, design = built in).
+COMMANDS="$(GATE_CONFIG="$CONFIG" GATE_ONLY="$ONLY" GATE_SCRIPTS="$SCRIPTS" GATE_HOME="$H" GATE_BASE="$BASE" python3 -c '
+import json, os, shlex
+cfg = json.load(open(os.environ["GATE_CONFIG"]))
+checks = cfg.get("checks", {})
+scripts = shlex.quote(os.environ["GATE_SCRIPTS"])
 for cat in os.environ["GATE_ONLY"].split(","):
     if cat == "versions":
         print(f"versions\tpython3 {scripts}/check-versions.py .")
+        continue
+    if cat == "design":
+        if (cfg.get("design") or {}).get("ui_paths"):
+            home = shlex.quote(os.environ["GATE_HOME"])
+            base = shlex.quote(os.environ["GATE_BASE"]) if os.environ["GATE_BASE"] else ""
+            print(f"design\tpython3 {scripts}/check-design.py {home} . {base}".rstrip())
         continue
     for cmd in checks.get(cat, []) or []:
         print(f"{cat}\t{cmd}")
 ')"
 
-if ! grep -qv $'^versions\t' <<< "$COMMANDS" && [[ -z "$TASK" ]]; then
+if ! grep -qvE $'^(versions|design)\t' <<< "$COMMANDS" && [[ -z "$TASK" ]]; then
   echo "gate: no project checks configured for [$ONLY] — the Architect must fill config.checks"
   exit 2
 fi

@@ -29,6 +29,9 @@ Wave-level work (fixes after wave review, wave tests, eval reports)
   fix-start <N> <label> [task-ids]   worktree runtime/worktrees/<label> on branch <wave branch>-<label> from the wave branch;
                                      task-ids (comma-separated) = whose owns_files the fix may touch (ownership check)
   fix-merge <label>                  merge it into the wave branch and remove the worktree; exit 2 on conflict
+  fix-drop <label>                   discard it (worktree + branch) without merging
+  ui-tasks <N>                       comma-separated merged tasks of wave N that are UI work (builder-ui or tag ui)
+  known-issue <N> <text>             append a line to the wave's known issues (shown in the PR body)
 
 Results and status
   result <id> <step>          print compact verdict from runtime/results/<id>/<step>.json
@@ -253,7 +256,7 @@ def cmd_ingest_quiet(p):
 def open_base_wave(p, n):
     """Return the previous wave's branch if its PR is still open (stacking), else None."""
     prev = p.state["waves"].get(str(int(n) - 1))
-    if prev and prev.get("status") in ("building", "reviewing", "wave_tests", "pr_open") and p.branch_exists(p.wave_branch(int(n) - 1)):
+    if prev and prev.get("status") in ("building", "polishing", "reviewing", "wave_tests", "pr_open") and p.branch_exists(p.wave_branch(int(n) - 1)):
         return p.wave_branch(int(n) - 1)
     return None
 
@@ -304,6 +307,19 @@ def cmd_wave_sync(p, n):
 def cmd_wave_set(p, n, key, value):
     p.state["waves"][str(n)][key] = json.loads(value)
     p.save(f"wave-set {n} {key}")
+
+
+def cmd_known_issue(p, n, text):
+    w = p.state["waves"][str(n)]
+    w.setdefault("known_issues", []).append(text)
+    p.save(f"known-issue {n}")
+
+
+def cmd_ui_tasks(p, n):
+    ids = [tid for tid, t in sorted(p.state["tasks"].items())
+           if t["wave"] == int(n) and t["status"] == "merged"
+           and (t.get("assigned_to") == "builder-ui" or "ui" in t.get("tags", []))]
+    print(",".join(ids))
 
 
 def cmd_ready(p, n):
@@ -614,11 +630,24 @@ def cmd_open_pr(p, n):
     return 0
 
 
+def cmd_fix_drop(p, label):
+    f = p.state.get("fixes", {}).get(label)
+    if not f:
+        sys.exit(f"unknown fix worktree: {label}")
+    if os.path.isdir(f["worktree"]):
+        p.git("worktree", "remove", "--force", f["worktree"])
+    p.git("branch", "-D", f["branch"], check=False)
+    del p.state["fixes"][label]
+    p.save(f"fix-drop {label}")
+    print(json.dumps({"dropped": label}))
+
+
 COMMANDS = {
     "ingest": cmd_ingest, "wait": cmd_wait, "wave-start": cmd_wave_start, "wave-sync": cmd_wave_sync,
     "wave-set": cmd_wave_set, "open-pr": cmd_open_pr, "pr-body": cmd_pr_body, "ready": cmd_ready,
     "task-start": cmd_task_start, "task-merge": cmd_task_merge, "task-park": cmd_task_park, "task-set": cmd_task_set,
-    "fix-start": cmd_fix_start, "fix-merge": cmd_fix_merge, "attempt": cmd_attempt, "reconcile": cmd_reconcile, "result": cmd_result, "log": cmd_log,
+    "fix-start": cmd_fix_start, "fix-merge": cmd_fix_merge, "fix-drop": cmd_fix_drop,
+    "ui-tasks": cmd_ui_tasks, "known-issue": cmd_known_issue, "attempt": cmd_attempt, "reconcile": cmd_reconcile, "result": cmd_result, "log": cmd_log,
     "status": cmd_status, "profile": cmd_profile, "question": cmd_question,
 }
 
