@@ -5,7 +5,22 @@ The team converses with two agents (Architect, Prototyper); an autonomous Forema
 
 **Scope of Agent-thon:** coding only. Whatever the built app does at runtime (including calling its own LLM APIs) is configured in the app and its deploy environment, not in Agent-thon.
 
-**No project specifics in the toolkit.** Stack, libraries, data formats, domain rules and schemas are decided per project by the Architect with the team and stored in that project's `.agentthon/`. The toolkit ships methods, checklists and playbooks — not choices.
+**No project specifics in the toolkit.** Stack, libraries, data formats, domain rules and schemas are decided per project by the Architect with the team and stored in that project's agent home. The toolkit ships methods, checklists and playbooks — not choices.
+
+---
+
+## 0. Revision 2 — agent home + Split & Contracts phase (supersedes parts of §2, §4, §5, §12)
+
+**Agent home (sidecar).** A project is two folders side by side: the product repo (`<repo>/`, product code only, in fixed layout folders such as `frontend/ api/ analytics/`) and the agent home (`<repo>-agents/`, its own private GitHub repo). Nothing from Agent-thon is committed to the product repo; `.agentthon/`, `.claude/`, generated `AGENTS.md`/`CLAUDE.md`/copilot instructions, CODEOWNERS, the Agent-thon CI and the PR template are gone. Wherever older sections say `.agentthon/<x>`, read `<repo>-agents/<x>`.
+- Sessions run in the agent home with the product repo as `--add-dir`; settings are generated per machine (`runtime/claude-settings.json`, passed with `--settings`).
+- **Plan PRs** live in the agent home repo; merging one releases the wave. The Foreman reads the released plan from `runtime/plan` (detached worktree of the agent home at `origin/main`) and builds in product-repo worktrees under `runtime/worktrees/`. **Wave PRs** go to the product repo and contain product files only.
+- **Contracts**: source in the agent home `contracts/` (+ `examples/<name>/`); published to `config.contracts_dir` in the product repo by a contracts PR (`contracts.py publish`); the Foreman syncs them into each wave branch as one commit.
+- **Enforcement** moves from CI to the local gate: ownership, claims, layout (`config.layout`), contracts folder read-only, exact versions. No CI from Agent-thon; the product may have its own.
+- **One Foreman per project across machines**: local PID lock + `foreman-lock` branch in the agent home repo. Foreman questions also become issues labelled `foreman-question` there.
+- Teammates clone both repos side by side; `TEAM.md`, claims and requests live in the agent home. Their own AI tools don't see the agent home; the kick-off note tells each person what their tool must follow.
+
+**Architect phases.** 0 Brief & Challenge → **1 Split & Contracts** (new) → 2 Design (agent chunks) → 3 Wave planning (agent chunks).
+Phase 1: agree the layout; runtime per area; split into chunks (`chunks.json`: owner `agents` or `@handle`, paths, provides/consumes, works_alone_with); draft contracts with 1–3 realistic examples each; contract review (`contracts.py check`, demo walk-through, producer/consumer pass with owners, Prototyper check); freeze + publish; kick-off note per owner. After the freeze: additive changes are announced and republished; breaking changes need every affected owner's agreement. `chunks.py` validates the split and generates `ownership.yml`.
 
 ---
 
@@ -473,3 +488,5 @@ GitHub: toolkit is a local git repo; a private GitHub repo is created after Phas
 | Eval | hard failures auto-block; scores → human decision on the wave PR |
 | Project scoping | toolkit global; per-project `.agentthon/`; one Foreman per project |
 | Architect speed | specs capped ~60 lines / 3,500 chars and point to contracts/context packs (check-wave warns); wave.json is an index; >5 tasks → Architect writes wave.json, 2–3 spec writers in parallel, agreeing on interfaces through each task's `provides` line; one `domain.md` (Rules + Checklist); context packs ≤60 lines, only for areas the next wave needs; replies ≤10 lines by default |
+| Agent home | product repo holds product code only; everything Agent-thon lives in `<repo>-agents/` (own private repo); plan PRs there, wave + contracts PRs in the product repo; enforcement in the local gate instead of CI |
+| Split & Contracts phase | new Architect phase 1 before detailed design: chunks with one owner each, contracts + examples reviewed and frozen early, published by contracts PR so people and agents build independently |

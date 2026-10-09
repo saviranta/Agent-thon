@@ -11,10 +11,10 @@
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-PROJECT_ROOT="$(resolve_project "${1:-}")"
-CONFIG="$PROJECT_ROOT/.agentthon/config.json"
-ACTIVE="$(active_profile "$PROJECT_ROOT")"
-LOCAL="$PROJECT_ROOT/.agentthon/runtime/local.json"
+H="$(resolve_project "${1:-}")"
+CONFIG="$H/config.json"
+ACTIVE="$(active_profile "$H")"
+LOCAL="$H/runtime/local.json"
 
 require_profile() {
   [[ -n "$(json_get "$CONFIG" "profiles.$1")" ]] || die "Unknown profile: '$1' (defined: $(json_get "$CONFIG" profiles | python3 -c 'import json,sys; print(", ".join(json.load(sys.stdin)))'))"
@@ -27,14 +27,14 @@ case "${2:-}" in
     ;;
   set)
     require_profile "${3:-}"
-    [[ -f "$LOCAL" ]] || echo '{}' > "$LOCAL"
+    mkdir -p "$H/runtime"; [[ -f "$LOCAL" ]] || echo '{}' > "$LOCAL"
     json_set "$LOCAL" profile "\"$3\""
     echo "Profile set to $3 on this machine (the Foreman applies it from the next wave or on resume)"
     ;;
   default)
     require_profile "${3:-}"
     json_set "$CONFIG" profile "\"$3\""
-    echo "Shared default profile set to $3 in config.json — commit it via a PR"
+    echo "Shared default profile set to $3 in config.json — commit it in the agent home"
     ;;
   model)
     VAL="$(json_get "$CONFIG" "profiles.$ACTIVE.models.${3:-}")"

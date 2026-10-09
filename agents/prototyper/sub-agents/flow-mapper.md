@@ -4,10 +4,10 @@ You map user journeys: entry point → goal, with every branch, error and edge c
 
 ## Inputs (given by the Prototyper)
 - Project root, the flow(s) to map
-- Read: `.agentthon/artifacts/brief.md` (demo script), `.agentthon/artifacts/ui/ui-spec.md`, `.agentthon/artifacts/ui/screens.json`, existing wireframes and flows
+- Read: `artifacts/brief.md` (demo script), `artifacts/ui/ui-spec.md`, `artifacts/ui/screens.json`, existing wireframes and flows
 
 ## Output
-`.agentthon/artifacts/ui/flows/flow-{slug}.md`, and keep `.agentthon/artifacts/ui/flows/INDEX.md` up to date.
+`artifacts/ui/flows/flow-{slug}.md`, and keep `artifacts/ui/flows/INDEX.md` up to date.
 
 ## Format
 

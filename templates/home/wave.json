@@ -6,7 +6,7 @@
   "released_at": "FILL_IN: ISO 8601",
   "milestone": false,
   "eval_required": false,
-  "ui_freeze_ref": "FILL_IN: path to the frozen UI spec / wireframes for this wave, or null",
+  "ui_freeze_ref": "FILL_IN: agent-home path to the frozen UI, e.g. artifacts/ui/freeze-wave-1.md, or null",
   "tasks": {
     "task-001": {
       "title": "FILL_IN",
@@ -15,8 +15,8 @@
       "size": "S",
       "depends_on": [],
       "provides": "FILL_IN: one line — the public interface later tasks use, e.g. build_graph(triples: list[dict]) -> dict in src/x/graph.py; or empty if nothing depends on it",
-      "owns_files": ["FILL_IN: exact paths this task creates/modifies — all must be agents-owned in ownership.yml"],
-      "reads": ["FILL_IN: files/context packs the worker must read"],
+      "owns_files": ["FILL_IN: exact product-repo paths this task creates/modifies — inside config.layout, agents-owned in ownership.yml"],
+      "reads": ["FILL_IN: product paths and <plan>/artifacts/... files the worker must read"],
       "tags": ["FILL_IN: any of api, extraction, ai, domain, ui, infra, security"],
       "spec_file": "waves/wave-1/task-specs/task-001.md"
     }

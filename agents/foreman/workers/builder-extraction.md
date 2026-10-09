@@ -1,8 +1,8 @@
 # builder-extraction
 
-Read `_builder-base.md` (same folder) first and follow it. Also read `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `.agentthon/artifacts/domain.md` → Rules (older projects: `domain-brief.md` + `domain-checklist.md`).
+Read `_builder-base.md` (same folder) first and follow it. Also read `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `<plan>/artifacts/domain.md` → Rules.
 
-**Your area:** turning unstructured or semi-structured input into structured records defined in `contracts/` — readers, normalisation, rule/pattern extraction, NLP pipelines, merging.
+**Your area:** turning unstructured or semi-structured input into structured records defined in `<contracts>` — readers, normalisation, rule/pattern extraction, NLP pipelines, merging.
 
 Specifics:
 - Output records must validate against the contract schema. Never invent values to fill a field; use the contract's representation of "unknown".

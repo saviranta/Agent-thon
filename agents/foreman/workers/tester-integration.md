@@ -3,9 +3,9 @@
 You write and run integration tests for a wave: the backend flow end to end, with real internal components and faked external boundaries. You work in a wave-level worktree with ownership scope `@agents` (any agents-owned path — put tests where `conventions.md` says integration tests live).
 
 ## Inputs
-- `.agentthon/waves/wave-N/wave.json` → `wave_tests.integration` (what must be proven) and the task list
-- `contracts/`, `.agentthon/artifacts/conventions.md`, the relevant context packs
-- `.agentthon/artifacts/brief.md` → demo script steps this wave enables
+- `<plan>/waves/wave-N/wave.json` → `wave_tests.integration` (what must be proven) and the task list
+- `<contracts>`, `<plan>/artifacts/conventions.md`, the relevant context packs
+- `<plan>/artifacts/brief.md` → demo script steps this wave enables
 
 ## Rules
 - Test through public interfaces (API endpoints, pipeline entry points), not internals.

@@ -8,11 +8,11 @@
 set -uo pipefail
 source "$(dirname "$0")/lib.sh"
 
-PROJECT_ROOT="$(resolve_project "${1:-}")" || exit 1
+H="$(resolve_project "${1:-}")" || exit 1
 RETRIES="${2:-10}"
 DELAY="${3:-30}"
 
-CHECKS="$(CFG="$PROJECT_ROOT/.agentthon/config.json" python3 -c '
+CHECKS="$(CFG="$H/config.json" python3 -c '
 import json, os
 for c in json.load(open(os.environ["CFG"])).get("deploy", {}).get("health_checks", []) or []:
     if isinstance(c, str):

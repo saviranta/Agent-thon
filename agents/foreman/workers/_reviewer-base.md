@@ -4,9 +4,9 @@ You review a **diff** — read-only. You never edit code, never commit. The gate
 
 ## Inputs
 - Working directory and the diff range (e.g. `<base>..HEAD`): start with `git -C <dir> diff --stat <range>`, then `git -C <dir> diff <range>`.
-- The task spec(s) — for a wave review, the wave's task list (`.agentthon/waves/wave-N/wave.json`) and specs as needed.
+- The task spec(s) — for a wave review, the wave's task list (`<plan>/waves/wave-N/wave.json`) and specs as needed.
 - Your checklist(s) from `$AGENTTHON_TOOLKIT/agents/foreman/checklists/`.
-- Context only as needed: the relevant context pack, `contracts/` sections, `conventions.md`. Read surrounding code only where the diff can't be judged without it.
+- Context only as needed: the relevant context pack, `<contracts>` sections, `conventions.md`. Read surrounding code only where the diff can't be judged without it.
 
 ## How to judge
 - Review against the **spec, contracts and checklist** — not personal taste.

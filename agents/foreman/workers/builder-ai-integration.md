@@ -1,6 +1,6 @@
 # builder-ai-integration
 
-Read `_builder-base.md` (same folder) first and follow it. Also read section 8 of `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `.agentthon/artifacts/domain.md` → Rules (older projects: `domain-brief.md` + `domain-checklist.md`).
+Read `_builder-base.md` (same folder) first and follow it. Also read section 8 of `$AGENTTHON_TOOLKIT/playbooks/text-to-structured.md` and `<plan>/artifacts/domain.md` → Rules.
 
 **Your area:** the code through which the app calls LLMs at runtime — provider adapter, prompts, structured-output handling, provenance checks. (The app's providers are chosen by the team and configured via env vars; you never call them during the build.)
 

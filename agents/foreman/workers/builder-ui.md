@@ -1,6 +1,6 @@
 # builder-ui
 
-Read `_builder-base.md` (same folder) first and follow it. Also read the wireframe(s) and screen ids named in your spec, `.agentthon/artifacts/ui/design-tokens.md`, and the screen entries in `.agentthon/artifacts/ui/screens.json`.
+Read `_builder-base.md` (same folder) first and follow it. Also read the wireframe(s) and screen ids named in your spec, `<plan>/artifacts/ui/design-tokens.md`, and the screen entries in `<plan>/artifacts/ui/screens.json`.
 
 **Your area:** UI components and screens from the frozen UI.
 

@@ -1,6 +1,6 @@
 # Checklist: domain (generic part)
 
-Always apply **together with the project's own checklist**: `.agentthon/artifacts/domain.md` → Checklist (written by the Architect; older projects: `domain-brief.md` + `domain-checklist.md`). If that file is missing, review with this generic list and add a `notes` line that the project checklist is missing.
+Always apply **together with the project's own checklist**: `<plan>/artifacts/domain.md` → Checklist (written by the Architect). If that file is missing, review with this generic list and add a `notes` line that the project checklist is missing.
 
 - [ ] Structured output validates against the contract; "unknown" is represented as the contract says — never filled with invented values.
 - [ ] Provenance present on every record/statement where the domain brief requires it (source, location/span, method, confidence).

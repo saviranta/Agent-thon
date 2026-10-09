@@ -1,9 +1,7 @@
-# Agent-thon runtime (local to each machine; the rest of .agentthon/ is shared)
-.agentthon/runtime/
-
 # Environment and secrets
 .env
 .env.*
+!.env.example
 secrets/
 
 # Dependencies and builds

@@ -5,17 +5,17 @@
 **Why:** [one line: which demo-script step this enables]
 **Depends on:** task-NNN ([the file / function / endpoint it provides]) | none
 
-## Files (owned; agents-owned in ownership.yml)
+## Files (owned; product-repo paths, agents-owned in ownership.yml)
 - [exact/path.ext]
 - [exact/path.test.ext]
 
 ## Read
-- contracts/[file] → [section / type name]
-- .agentthon/artifacts/context/[pack].md → [section]
+- [contracts_dir]/[file] → [section / type name]   (product path, e.g. api/contracts/graph.schema.json)
+- <plan>/artifacts/context/[pack].md → [section]
 - [exact/path.ext] → [lines or symbol]
 
 ## Do
-- Interface: [one line, e.g. `extract(text: str) -> Extraction` per contracts/extraction.schema.json]
+- Interface: [one line, e.g. `extract(text: str) -> Extraction` per [contracts_dir]/extraction.schema.json]
 - [behaviour rule / edge case / error handling — only what is NOT already in the contract or context pack]
 
 ## Unit tests (written and run by the builder)

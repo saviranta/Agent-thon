@@ -1,0 +1,66 @@
+{
+  "_comment": "Template. run-agent.sh replaces each <x_dir> placeholder with the absolute path (so /<x_dir> becomes the //abs/path form) per machine and writes runtime/claude-settings.json (never committed). Extra domains come from config.network.allowed_domains.",
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "filesystem": {
+      "allowRead": ["/<home_dir>", "/<repo_dir>", "/<toolkit_dir>"],
+      "allowWrite": ["/<home_dir>", "/<repo_dir>"],
+      "denyRead": [
+        "/<user_home>/.ssh",
+        "/<user_home>/.aws",
+        "/<user_home>/.gnupg",
+        "/<user_home>/.netrc",
+        "/<user_home>/.npmrc",
+        "/<user_home>/.docker",
+        "/<user_home>/.kube",
+        "/<user_home>/.bash_history",
+        "/<user_home>/.zsh_history"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "*.github.com",
+        "*.githubusercontent.com",
+        "*.npmjs.org",
+        "registry.yarnpkg.com",
+        "pypi.org",
+        "files.pythonhosted.org"
+      ]
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Read(/<repo_dir>/**/.env*)",
+      "Read(/<home_dir>/**/.env*)",
+      "Read(/<repo_dir>/**/secrets/**)",
+      "Edit(/<home_dir>/runtime/claude-settings.json)",
+      "Edit(/<toolkit_dir>/**)",
+      "Bash(git push origin main*)",
+      "Bash(git push * main)",
+      "Bash(gh pr merge*)"
+    ],
+    "allow": [
+      "Read(/<home_dir>/**)",
+      "Edit(/<home_dir>/**)",
+      "Read(/<repo_dir>/**)",
+      "Edit(/<repo_dir>/**)",
+      "Read(/<toolkit_dir>/**)",
+      "Bash(git *)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr edit*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr comment*)",
+      "Bash(gh issue list*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue create*)",
+      "Bash(gh issue comment*)",
+      "Bash(gh issue close*)",
+      "Bash(bash <toolkit_dir>/scripts/*)",
+      "Bash(python3 *)",
+      "mcp__GitHits__*"
+    ]
+  }
+}

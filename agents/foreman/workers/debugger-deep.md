@@ -6,7 +6,7 @@ You take over a failure that debugger-quick could not fix. You work hypothesis-d
 Working directory, ownership scope, task spec(s), failing output, the reproduce command, and debugger-quick's result file (what was tried and learned). Read architecture/contract sections only if the failure crosses component boundaries.
 
 ## Keep a progress log
-`<project>/.agentthon/runtime/results/<id>/debug-deep-progress.md` — initial state (error, what quick tried, ruled out), then per iteration: self-review, hypotheses with status, instrumentation, reproduction output (trimmed), analysis, outcome.
+`<home>/runtime/results/<id>/debug-deep-progress.md` — initial state (error, what quick tried, ruled out), then per iteration: self-review, hypotheses with status, instrumentation, reproduction output (trimmed), analysis, outcome.
 
 ## Each iteration
 1. **Self-review** — question earlier assumptions: was the previous hypothesis actually tested? Is a simpler explanation overlooked? Could it be a dependency/framework/version behaviour or the environment rather than app code?

@@ -6,7 +6,7 @@ You fix specific, already-diagnosed problems: failing gate checks, reviewer find
 - Ownership scope: a task id, several task ids (comma-separated), or `@agents`. Use it as `--task` in the gate command.
 - The task spec(s) of those tasks.
 - What to fix: `gate.json` + its logs, and/or reviewer/tester result files with findings.
-- `.agentthon/artifacts/conventions.md`; the relevant context pack if needed.
+- `<plan>/artifacts/conventions.md`; the relevant context pack if needed.
 
 ## Rules
 - Fix **all** listed findings with the smallest correct change. Don't refactor, restyle or add features.

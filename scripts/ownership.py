@@ -1,7 +1,8 @@
-"""ownership.py — parse .agentthon/ownership.yml and claims.md, resolve owners for paths.
+"""ownership.py — parse ownership.yml and claims.md (in the agent home or the released plan), resolve owners
+for product-repo paths.
 
-Shared by check-wave.py (planning) and ownership-check (gate/CI). Standard library only.
-The YAML subset supported is the one in templates/project/ownership.yml:
+Shared by check-wave.py (planning), chunks.py and ownership-check.py (gate). Standard library only.
+The YAML subset supported is the one chunks.py writes:
 
 areas:
   - path: "glob/**"
@@ -29,9 +30,10 @@ def _parse_list(v):
     return [_unquote(v)] if v else []
 
 
-def load_ownership(project_root):
-    """Return a list of areas: {path, owner, reviewers, change_rule}. Comma-separated paths expand to one area each."""
-    path = os.path.join(project_root, ".agentthon", "ownership.yml")
+def load_ownership(d):
+    """Areas from <d>/ownership.yml (d = agent home or plan dir): {path, owner, reviewers, change_rule}.
+    Comma-separated paths expand to one area each. `areas: []` (nothing generated yet) → no areas."""
+    path = os.path.join(d, "ownership.yml")
     areas, cur = [], None
     with open(path) as f:
         for raw in f:
@@ -92,9 +94,9 @@ def owner_of(areas, path):
     return max(matches, key=lambda a: _specificity(a["path"]))
 
 
-def load_claims(project_root):
+def load_claims(d):
     """Return a list of {who, path, until, note} from claims.md table rows."""
-    path = os.path.join(project_root, ".agentthon", "claims.md")
+    path = os.path.join(d, "claims.md")
     claims = []
     if not os.path.exists(path):
         return claims

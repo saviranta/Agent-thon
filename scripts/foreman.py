@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """foreman.py — deterministic mechanics for the Foreman agent (no LLM).
 
-Usage: foreman.py <project> <command> [args]
+Usage: foreman.py <project> <command> [args]     (<project> = agent home or the product repo next to it)
+
+Plan vs product: released waves are read from runtime/plan — a detached worktree of the agent home at its
+main (origin/main when shared). All branches, worktrees and PRs are in the product repo.
 
 Waves
-  ingest                      fetch main, add newly released waves/tasks to runtime state
-  wait [seconds]              poll main until a pending wave exists (default 540s); exit 0 found / 3 timeout
-  wave-start <N>              create agentthon/wave-N (stacked on an open previous wave if needed), check out in foreman worktree
-  wave-sync <N>               merge main (and open base wave) into wave N; exit 2 on conflict (merge aborted)
+  ingest                      refresh runtime/plan from the agent home's main, add newly released waves/tasks to state
+  wait [seconds]              poll until a pending wave exists (default 540s); exit 0 found / 3 timeout
+  wave-start <N>              create the wave branch (stacked on an open previous wave if needed) in the foreman
+                              worktree and sync the plan's contracts into it (one commit)
+  wave-sync <N>               merge main (and open base wave) into wave N, re-sync contracts; exit 2 on conflict
   wave-set <N> <key> <json>   set a wave field (status, etc.)
   open-pr <N>                 push wave branch and open the PR with a generated body (or write body if no remote)
   pr-body <N>                 print the PR body
@@ -22,14 +26,15 @@ Tasks
   reconcile                   after resume: report in-progress tasks and their worktree state
 
 Wave-level work (fixes after wave review, wave tests, eval reports)
-  fix-start <N> <label> [task-ids]   worktree runtime/worktrees/<label> on branch agentthon/w<N>-<label> from the wave branch;
+  fix-start <N> <label> [task-ids]   worktree runtime/worktrees/<label> on branch <wave branch>-<label> from the wave branch;
                                      task-ids (comma-separated) = whose owns_files the fix may touch (ownership check)
   fix-merge <label>                  merge it into the wave branch and remove the worktree; exit 2 on conflict
 
 Results and status
   result <id> <step>          print compact verdict from runtime/results/<id>/<step>.json
   log <agent> <task|-> [note] append to runtime/usage-log.jsonl
-  question <text>             add an open question for the Architect (runtime/questions.md)
+  question <text>             question for the Architect: runtime/questions.md + issue labelled foreman-question in
+                              the agent home repo (when shared)
   status                      regenerate runtime/status.md
   profile                     print active profile settings as JSON
 """
@@ -44,6 +49,7 @@ import sys
 
 TOOLKIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(TOOLKIT, "scripts"))
+from agenthome import find_home, repo_of  # noqa: E402
 from ownership import claimed_by, load_claims  # noqa: E402
 
 SEVERITIES = ("critical", "standard", "polish")
@@ -54,11 +60,11 @@ def now():
 
 
 class Project:
-    def __init__(self, root):
-        self.root = os.path.realpath(root)
-        if not os.path.isdir(os.path.join(self.root, ".agentthon")):
-            sys.exit(f"Not an Agent-thon project: {self.root}")
-        self.rt = os.path.join(self.root, ".agentthon", "runtime")
+    def __init__(self, path):
+        self.home = find_home(path)
+        self.root = repo_of(self.home)          # product repo: all git work happens here
+        self.rt = os.path.join(self.home, "runtime")
+        self.plan = os.path.join(self.rt, "plan")
         self.wt_dir = os.path.join(self.rt, "worktrees")
         self.foreman_wt = os.path.join(self.wt_dir, "foreman")
         self.state_path = os.path.join(self.rt, "state.json")
@@ -82,14 +88,17 @@ class Project:
 
     # ── config ──
     def config(self):
-        """Prefer the foreman worktree's committed config (fresh from main); profile override is machine-local."""
-        path = os.path.join(self.foreman_wt, ".agentthon", "config.json")
+        """The released plan's config (runtime/plan), else the agent home's."""
+        path = os.path.join(self.plan, "config.json")
         if not os.path.exists(path):
-            path = os.path.join(self.root, ".agentthon", "config.json")
+            path = os.path.join(self.home, "config.json")
         return json.load(open(path))
 
+    def plan_dir(self):
+        return self.plan if os.path.exists(os.path.join(self.plan, "config.json")) else self.home
+
     def profile(self):
-        cfg = json.load(open(os.path.join(self.root, ".agentthon", "config.json")))
+        cfg = json.load(open(os.path.join(self.home, "config.json")))
         local = os.path.join(self.rt, "local.json")
         name = cfg.get("profile")
         if os.path.exists(local):
@@ -130,26 +139,64 @@ class Project:
         path = os.path.join(self.rt, "questions.md")
         existing = open(path).read() if os.path.exists(path) else ""
         n = len(re.findall(r"^## Q-\d+", existing, re.M)) + 1
+        qid = f"Q-{n:03d}"
+        url = ""
+        gh_repo = self.config().get("git", {}).get("agents_github_repo")
+        if gh_repo:
+            r = subprocess.run(["gh", "issue", "create", "-R", gh_repo, "--label", "foreman-question",
+                                "--title", f"{qid}: {text.splitlines()[0][:80]}", "--body", text],
+                               capture_output=True, text=True)
+            if r.returncode == 0:
+                url = r.stdout.strip().splitlines()[-1]
         with open(path, "a") as f:
-            f.write(f"\n## Q-{n:03d} ({now()}) — OPEN\n{text}\n")
-        return f"Q-{n:03d}"
+            f.write(f"\n## {qid} ({now()}) — OPEN{' ' + url if url else ''}\n{text}\n")
+        return qid
+
+    def refresh_plan(self):
+        """Point runtime/plan at the agent home's released main (origin/main when shared)."""
+        main = "main"
+        try:
+            main = json.load(open(os.path.join(self.home, "config.json"))).get("git", {}).get("main_branch", "main")
+        except ValueError:
+            pass
+        ref = main
+        if self.git("remote", "get-url", "origin", cwd=self.home, check=False).returncode == 0:
+            self.git("fetch", "--quiet", "origin", cwd=self.home, check=False)
+            if self.git("rev-parse", "--verify", "--quiet", f"origin/{main}", cwd=self.home, check=False).returncode == 0:
+                ref = f"origin/{main}"
+        if not os.path.isdir(self.plan):
+            self.git("worktree", "prune", cwd=self.home, check=False)
+            self.git("worktree", "add", "--quiet", "--detach", self.plan, ref, cwd=self.home)
+        else:
+            self.git("checkout", "--quiet", "--detach", ref, cwd=self.plan)
+        return ref, self.git("rev-parse", "--short", "HEAD", cwd=self.plan).stdout.strip()
+
+    def sync_contracts(self, n):
+        r = subprocess.run([sys.executable, os.path.join(TOOLKIT, "scripts", "contracts.py"), self.home, "sync",
+                            self.foreman_wt, f"[wave-{n}] contracts: sync from the released plan"],
+                           capture_output=True, text=True)
+        try:
+            return json.loads(r.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            raise RuntimeError(f"contracts sync failed: {r.stderr.strip() or r.stdout.strip()}")
 
 
 # ── commands ──
 
 def cmd_ingest(p, *_):
     p.fetch()
-    ref = p.main_ref()
-    ls = p.git("ls-tree", "--name-only", ref, ".agentthon/waves/", check=False).stdout.split()
+    plan_ref, plan_sha = p.refresh_plan()
+    waves_dir = os.path.join(p.plan, "waves")
+    entries = sorted(os.listdir(waves_dir)) if os.path.isdir(waves_dir) else []
     added = []
-    for entry in ls:
-        m = re.search(r"wave-(\d+)$", entry)
+    for entry in entries:
+        m = re.fullmatch(r"wave-(\d+)", entry)
         if not m or m.group(1) in p.state["waves"]:
             continue
-        r = p.git("show", f"{ref}:{entry}/wave.json", check=False)
-        if r.returncode != 0:
+        path = os.path.join(waves_dir, entry, "wave.json")
+        if not os.path.exists(path):
             continue
-        wave = json.loads(r.stdout)
+        wave = json.load(open(path))
         n = m.group(1)
         p.state["waves"][n] = {"status": "pending", "title": wave.get("title"), "goal": wave.get("goal"),
                                "eval_required": bool(wave.get("eval_required")), "milestone": bool(wave.get("milestone")),
@@ -161,9 +208,10 @@ def cmd_ingest(p, *_):
                                      "status": "pending", "attempts": {s: 0 for s in SEVERITIES}}
         added.append(n)
     refresh_prs(p)
+    p.state["plan"] = {"ref": plan_ref, "commit": plan_sha, "at": now()}
     p.save("ingest")
     pending = sorted((int(n) for n, w in p.state["waves"].items() if w["status"] == "pending"))
-    print(json.dumps({"new_waves": added, "pending_waves": pending}))
+    print(json.dumps({"new_waves": added, "pending_waves": pending, "plan": f"{plan_ref} {plan_sha}"}))
 
 
 def refresh_prs(p):
@@ -222,11 +270,12 @@ def cmd_wave_start(p, n):
         if p.git("status", "--porcelain", cwd=p.foreman_wt).stdout.strip():
             sys.exit("Foreman worktree has uncommitted changes — commit or clean them first")
         p.git("checkout", "--quiet", branch, cwd=p.foreman_wt)
+    sync = p.sync_contracts(n)
     w = p.state["waves"][str(n)]
     w.update(status="building", branch=branch, base=base, started_at=w.get("started_at") or now(),
-             profile=p.profile()["name"])
+             profile=p.profile()["name"], contracts_synced=bool(sync.get("changed")) or w.get("contracts_synced", False))
     p.save(f"wave-start {n}")
-    print(json.dumps({"wave": int(n), "branch": branch, "base": base, "worktree": p.foreman_wt}))
+    print(json.dumps({"wave": int(n), "branch": branch, "base": base, "worktree": p.foreman_wt, "contracts": sync}))
 
 
 def cmd_wave_sync(p, n):
@@ -244,6 +293,8 @@ def cmd_wave_sync(p, n):
             print(json.dumps({"conflict_with": src, "files": conflicts}))
             return 2
         merged.append(src)
+    if p.sync_contracts(n).get("changed"):
+        p.state["waves"][str(n)]["contracts_synced"] = True
     p.state["waves"][str(n)]["synced_at"] = now()
     p.save(f"wave-sync {n}")
     print(json.dumps({"synced": merged}))
@@ -259,7 +310,7 @@ def cmd_ready(p, n):
     prof = p.profile()
     limit = int(prof.get("parallel_workers", 1))
     tasks = p.state["tasks"]
-    claims = load_claims(p.foreman_wt if os.path.isdir(p.foreman_wt) else p.root)
+    claims = load_claims(p.plan_dir())
     busy = [t for t in tasks.values() if t["status"] == "in_progress"]
     busy_files = {f for t in busy for f in t["owns_files"]}
     slots = max(0, limit - len(busy))
@@ -279,7 +330,7 @@ def cmd_ready(p, n):
         if len(chosen) >= slots:
             break
         chosen.append({"id": tid, "assigned_to": t["assigned_to"], "tags": t["tags"],
-                       "spec": os.path.join(".agentthon", t["spec_file"]) if t.get("spec_file") else None})
+                       "spec": os.path.join(p.plan_dir(), t["spec_file"]) if t.get("spec_file") else None})
         busy_files |= set(t["owns_files"])
     remaining = [tid for tid, t in tasks.items() if t["wave"] == int(n) and t["status"] not in ("merged", "parked")]
     print(json.dumps({"dispatch": chosen, "skipped": skipped, "in_progress": [t for t, v in tasks.items() if v["status"] == "in_progress"],
@@ -328,7 +379,7 @@ def cmd_fix_start(p, n, label, task_ids=""):
     if not re.fullmatch(r"[A-Za-z0-9._-]+", label):
         sys.exit("label may contain letters, digits, '.', '_' and '-' only")
     wt = os.path.join(p.wt_dir, label)
-    branch = f"agentthon/w{n}-{label}"
+    branch = f"{p.wave_branch(n)}-{label}"
     if not os.path.isdir(wt):
         if p.branch_exists(branch):
             p.git("worktree", "add", "--quiet", wt, branch)
@@ -374,7 +425,7 @@ def cmd_fix_merge(p, label):
 def cmd_task_park(p, tid, reason):
     t = p.state["tasks"][tid]
     q = p.question(f"Task {tid} ({t['title']}) parked.\nReason: {reason}\n"
-                   f"Branch kept: {t.get('branch')}. Spec: .agentthon/{t.get('spec_file')}\n"
+                   f"Branch kept: {t.get('branch')} (product repo). Spec: {t.get('spec_file')} (agent home)\n"
                    f"Architect: re-spec, split, cut, or hand to a human.")
     if t.get("worktree") and os.path.isdir(t["worktree"]):
         p.git("add", "-A", cwd=t["worktree"], check=False)
@@ -480,12 +531,14 @@ def cmd_status(p, *_):
             lines.append(f"- {tid} [{t['status']}] {t['title']}{extra}")
     evals = [n for n, w in s["waves"].items() if w.get("eval_status") == "awaiting_decision"]
     if evals:
-        lines += ["", "## AWAITING EVAL DECISION", ""] + [f"- wave {n}: .agentthon/evals/reports/eval-wave-{n}.md" for n in evals]
+        lines += ["", "## AWAITING EVAL DECISION", ""] + [f"- wave {n}: runtime/results/wave-{n}/eval-report.md" for n in evals]
     qpath = os.path.join(p.rt, "questions.md")
     if os.path.exists(qpath):
         open_q = re.findall(r"^## (Q-\d+) .*— OPEN$", open(qpath).read(), re.M)
         if open_q:
-            lines += ["", f"## Open questions for the Architect: {', '.join(open_q)}", "(.agentthon/runtime/questions.md)"]
+            lines += ["", f"## Open questions for the Architect: {', '.join(open_q)}", "(runtime/questions.md; issues labelled foreman-question when shared)"]
+    if s.get("plan"):
+        lines += ["", f"Plan: {s['plan']['ref']} @ {s['plan']['commit']} (ingested {s['plan']['at']})"]
     lines += ["", f"Last step: {s.get('last_step')} · updated {s.get('updated_at')}"]
     open(os.path.join(p.rt, "status.md"), "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
@@ -493,10 +546,13 @@ def cmd_status(p, *_):
 
 def pr_body(p, n):
     w = p.state["waves"][str(n)]
+    footer = p.config().get("git", {}).get("pr_footer", True)
     tasks = {tid: t for tid, t in p.state["tasks"].items() if t["wave"] == int(n)}
     out = [f"## Wave {n}: {w.get('title') or ''}", "", f"**Goal:** {w.get('goal') or ''}", "",
-           f"Built by Agent-thon Foreman · profile `{w.get('profile')}` · base `{w.get('base')}`", "",
-           "### Tasks", "", "| Task | Title | Builder | Status |", "|---|---|---|---|"]
+           (f"Built by Agent-thon Foreman · profile `{w.get('profile')}` · " if footer else "") + f"base `{w.get('base')}`", ""]
+    if w.get("contracts_synced"):
+        out += ["Includes a contracts sync from the released plan (architect-owned folder).", ""]
+    out += ["### Tasks", "", "| Task | Title | Builder | Status |", "|---|---|---|---|"]
     for tid, t in sorted(tasks.items()):
         out.append(f"| {tid} | {t['title']} | {t['assigned_to']} | {t['status']} |")
     for step, title in (("review", "Review"), ("integration", "Integration tests"), ("e2e", "E2E tests"), ("eval", "Eval")):
@@ -515,10 +571,10 @@ def pr_body(p, n):
     if parked:
         out += ["", "### Parked tasks (not in this PR)", ""] + [f"- {tid}: {t.get('park_reason')}" for tid, t in parked]
     if w.get("eval_required"):
-        report = f".agentthon/evals/reports/eval-wave-{n}.md"
-        out += ["", "### Eval decision required", "", f"Report: `{report}`. Decide via the Architect: **approve**, **approve + follow-ups**, or **fail**. Do not merge before the decision."]
-    out += ["", "---", "Merge = deploy. Review behaviour and demo fit; the gates above cover the mechanics.",
-            "", "🤖 Generated with [Claude Code](https://claude.com/claude-code)"]
+        out += ["", "### Eval decision required", "", "The eval summary is posted as a comment on this PR. Decide via the Architect: **approve**, **approve + follow-ups**, or **fail**. Do not merge before the decision."]
+    out += ["", "---", "Merge = deploy. Review behaviour and demo fit; the gates above cover the mechanics."]
+    if footer:
+        out += ["", "🤖 Generated with [Claude Code](https://claude.com/claude-code)"]
     return "\n".join(out) + "\n"
 
 

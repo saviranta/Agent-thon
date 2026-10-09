@@ -1,25 +1,30 @@
 #!/bin/bash
-# gate.sh — deterministic quality gate: project checks (+ ownership in task mode). No LLM.
+# gate.sh — deterministic quality gate: project checks + exact versions (+ ownership in task mode). No LLM.
 #
 # Usage:
-#   gate.sh <work-dir> [--task <task-id> --base <ref>] [--results <dir>] [--only <categories>]
+#   gate.sh <project> <work-dir> [--task <ids|@agents> --base <ref>] [--results <dir>] [--only <categories>]
 #
-#   <work-dir>   a task worktree, the Foreman's wave worktree, or a CI checkout
+#   <project>    agent home (or the product repo next to it)
+#   <work-dir>   a product worktree (task, fix or the Foreman's wave worktree) or a checkout
 #   --task/--base  also run the ownership check for that task against <ref>
-#   --results    write gate.json + per-check logs there (default: <work-dir>/.agentthon/runtime/gate-results)
-#   --only       comma-separated subset of: setup,lint,types,unit,contract,e2e (default: setup,lint,types,unit,contract)
+#   --results    write gate.json + per-check logs there (default: <home>/runtime/gate-results)
+#   --only       comma-separated subset of: setup,lint,types,unit,contract,e2e,versions
+#                (default: setup,lint,types,unit,contract,versions)
 #
-# Commands come from <work-dir>/.agentthon/config.json → checks.<category> (lists of shell commands,
-# run from <work-dir>). Exit 0 = all passed, 1 = something failed, 2 = no checks configured.
+# Check commands come from config.checks.<category> of the released plan (runtime/plan, else the agent
+# home) and run from <work-dir>. `versions` is built in (exact dependency versions, no ^ or ~).
+# Exit 0 = all passed, 1 = something failed, 2 = usage / no checks configured.
 
 set -uo pipefail
 SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPTS/lib.sh"
 
-WORK_DIR="${1:-}"
-[[ -d "$WORK_DIR" ]] || { echo "Usage: gate.sh <work-dir> [--task id --base ref] [--results dir] [--only cats]" >&2; exit 2; }
+H="$(resolve_project "${1:-}")" || exit 2
+WORK_DIR="${2:-}"
+[[ -d "$WORK_DIR" ]] || { echo "Usage: gate.sh <project> <work-dir> [--task ids --base ref] [--results dir] [--only cats]" >&2; exit 2; }
 WORK_DIR="$(cd "$WORK_DIR" && pwd)"
-shift
-TASK="" BASE="" RESULTS="" ONLY="setup,lint,types,unit,contract"
+shift 2
+TASK="" BASE="" RESULTS="" ONLY="setup,lint,types,unit,contract,versions"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --task) TASK="$2"; shift 2 ;;
@@ -29,22 +34,27 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
-RESULTS="${RESULTS:-$WORK_DIR/.agentthon/runtime/gate-results}"
+RESULTS="${RESULTS:-$H/runtime/gate-results}"
 mkdir -p "$RESULTS"
-CONFIG="$WORK_DIR/.agentthon/config.json"
-[[ -f "$CONFIG" ]] || { echo "No .agentthon/config.json in $WORK_DIR" >&2; exit 2; }
+PLAN="$H"
+[[ -f "$H/runtime/plan/config.json" ]] && PLAN="$H/runtime/plan"
+CONFIG="$PLAN/config.json"
 
-# Emit "category<TAB>command" lines for the selected categories.
-COMMANDS="$(GATE_CONFIG="$CONFIG" GATE_ONLY="$ONLY" python3 -c '
+# Emit "category<TAB>command" lines for the selected categories (versions = built in).
+COMMANDS="$(GATE_CONFIG="$CONFIG" GATE_ONLY="$ONLY" GATE_SCRIPTS="$SCRIPTS" python3 -c '
 import json, os
 checks = json.load(open(os.environ["GATE_CONFIG"])).get("checks", {})
+scripts = os.environ["GATE_SCRIPTS"]
 for cat in os.environ["GATE_ONLY"].split(","):
+    if cat == "versions":
+        print(f"versions\tpython3 {scripts}/check-versions.py .")
+        continue
     for cmd in checks.get(cat, []) or []:
         print(f"{cat}\t{cmd}")
 ')"
 
-if [[ -z "$COMMANDS" && -z "$TASK" ]]; then
-  echo "gate: no checks configured for [$ONLY] — the Architect must fill config.checks"
+if ! grep -qv $'^versions\t' <<< "$COMMANDS" && [[ -z "$TASK" ]]; then
+  echo "gate: no project checks configured for [$ONLY] — the Architect must fill config.checks"
   exit 2
 fi
 
@@ -78,13 +88,13 @@ done <<< "$COMMANDS"
 if [[ -n "$TASK" ]]; then
   [[ -n "$BASE" ]] || { echo "--task requires --base" >&2; exit 2; }
   LOG="$RESULTS/ownership.log"
-  if python3 "$SCRIPTS/ownership-check.py" task "$WORK_DIR" "$TASK" "$BASE" >"$LOG" 2>&1; then
+  if python3 "$SCRIPTS/ownership-check.py" "$H" "$WORK_DIR" "$TASK" "$BASE" >"$LOG" 2>&1; then
     echo "PASS  ownership"
-    add_result ownership "ownership-check task $TASK" pass "$LOG"
+    add_result ownership "ownership-check $TASK" pass "$LOG"
   else
     echo "FAIL  ownership   (log: $LOG)"
     sed 's/^/      /' "$LOG"
-    add_result ownership "ownership-check task $TASK" fail "$LOG"
+    add_result ownership "ownership-check $TASK" fail "$LOG"
     OVERALL=1
   fi
 fi

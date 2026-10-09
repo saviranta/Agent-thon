@@ -1,0 +1,18 @@
+{
+  "_comment": "Architect phase 1 (Split & Contracts). Template — copy into the agent home as chunks.json and fill in. Paths are product-repo globs inside config.layout.folders. provides/consumes name files in contracts/.",
+  "contracts_status": "draft",
+  "chunks": [
+    {
+      "id": "FILL_IN: short-id",
+      "title": "FILL_IN: what this chunk is",
+      "paths": ["FILL_IN: folder/**"],
+      "owner": "FILL_IN: agents | @github-handle",
+      "reviewers": [],
+      "purpose": "FILL_IN: one line — what it does for the demo",
+      "demo_steps": [],
+      "provides": ["FILL_IN: contract files this chunk implements, e.g. upload-api.yaml"],
+      "consumes": ["FILL_IN: contract files this chunk calls or reads"],
+      "works_alone_with": "FILL_IN: how it is built and tested before the others exist (fixtures in contracts/examples, a fake, a stub server)"
+    }
+  ]
+}

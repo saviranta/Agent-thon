@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """check-wave.py — deterministic checks for a planned wave (no LLM, no tokens).
 
-Usage: check-wave.py <project-root> <wave-number>
+Usage: check-wave.py <project> <wave-number>    (reads the agent home working copy — run before release)
 Exit 0 = no errors (warnings allowed), 1 = errors.
 """
 
@@ -11,6 +11,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agenthome import contracts_dir, find_home, in_layout, load_config  # noqa: E402
 from ownership import claimed_by, load_claims, load_ownership, owner_of  # noqa: E402
 
 BUILDERS = {"builder-infra", "builder-api", "builder-extraction", "builder-ai-integration",
@@ -24,14 +25,14 @@ MAX_TASK_ENTRY_CHARS = 900  # wave.json is an index, not prose
 
 
 def load_wave(project, n):
-    path = os.path.join(project, ".agentthon", "waves", f"wave-{n}", "wave.json")
+    path = os.path.join(project, "waves", f"wave-{n}", "wave.json")
     with open(path) as f:
         return json.load(f), path
 
 
 def earlier_task_ids(project, n):
     ids = set()
-    waves_dir = os.path.join(project, ".agentthon", "waves")
+    waves_dir = os.path.join(project, "waves")
     for name in os.listdir(waves_dir):
         m = re.fullmatch(r"wave-(\d+)", name)
         if m and int(m.group(1)) < n:
@@ -54,14 +55,16 @@ def main():
     if len(sys.argv) != 3:
         print(__doc__)
         return 2
-    project, n = os.path.abspath(sys.argv[1]), int(sys.argv[2])
+    project, n = find_home(sys.argv[1]), int(sys.argv[2])
+    cfg = load_config(project)
+    cdir = contracts_dir(cfg)
     errors, warnings = [], []
     err, warn = errors.append, warnings.append
 
     try:
         wave, wave_path = load_wave(project, n)
     except FileNotFoundError:
-        print(f"ERROR wave file missing: .agentthon/waves/wave-{n}/wave.json")
+        print(f"ERROR wave file missing: waves/wave-{n}/wave.json")
         return 1
     except json.JSONDecodeError as e:
         print(f"ERROR wave.json is not valid JSON: {e}")
@@ -82,7 +85,8 @@ def main():
 
     areas = load_ownership(project)
     claims = load_claims(project)
-    agentthon = os.path.join(project, ".agentthon")
+    if not areas:
+        err("ownership.yml has no areas — run chunks.py <project> ownership after phase 1")
 
     for tid, t in tasks.items():
         p = f"{tid}:"
@@ -102,9 +106,11 @@ def main():
         if len(files) > MAX_FILES:
             err(f"{p} owns {len(files)} files (max {MAX_FILES}) — split the task")
         for f in files:
-            if f.startswith("contracts/"):
+            if f.startswith("contracts/") or (cdir and (f == cdir or f.startswith(cdir + "/"))):
                 err(f"{p} {f}: contracts are written by the Architect, not by tasks")
                 continue
+            if not in_layout(cfg, f):
+                err(f"{p} {f}: outside the product layout {cfg.get('layout', {}).get('folders')} (config.layout)")
             area = owner_of(areas, f)
             if area is None:
                 err(f"{p} {f}: no ownership area matches — add it to ownership.yml")
@@ -126,9 +132,9 @@ def main():
             warn(f"{p} wave.json entry is {len(json.dumps(t))} chars (cap {MAX_TASK_ENTRY_CHARS}) — keep detail in the spec")
 
         spec_rel = t.get("spec_file", "")
-        spec = os.path.join(agentthon, spec_rel)
+        spec = os.path.join(project, spec_rel)
         if not spec_rel or not os.path.exists(spec):
-            err(f"{p} spec file missing: .agentthon/{spec_rel}")
+            err(f"{p} spec file missing: {spec_rel}")
         else:
             text = open(spec).read()
             if "FILL_IN" in text or re.search(r"\[exact/path", text):
@@ -161,6 +167,22 @@ def main():
             shared = set(tasks[a].get("owns_files", [])) & set(tasks[b].get("owns_files", []))
             if shared and a not in ancestors(tasks, b) and b not in ancestors(tasks, a):
                 err(f"{a} and {b} can run in parallel but both own {sorted(shared)}")
+
+    chunks_path = os.path.join(project, "chunks.json")
+    if not os.path.exists(chunks_path):
+        warn("no chunks.json — phase 1 (Split & Contracts) hasn't happened")
+    elif json.load(open(chunks_path)).get("contracts_status") != "frozen":
+        warn("contracts are still 'draft' in chunks.json — freeze them before building against them")
+    if cdir:
+        try:
+            from contracts import compare
+            d = compare(project)
+            pending = d["added"] + d["changed"] + d["removed"]
+            if pending:
+                warn(f"contracts not yet on the product's main ({', '.join(pending)}) — the Foreman syncs them into the "
+                     "wave branch, but teammates only see them after `contracts.py <project> publish` is merged")
+        except SystemExit as e:
+            warn(f"could not compare contracts with the product repo: {e}")
 
     wt = wave.get("wave_tests", {})
     if not wt.get("integration"):

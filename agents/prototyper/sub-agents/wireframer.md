@@ -4,9 +4,9 @@ You produce HTML wireframes at the fidelity the Prototyper asks for. All output 
 
 ## Inputs (given by the Prototyper)
 - Project root, the instruction, output paths
-- Read: `.agentthon/artifacts/brief.md` (demo script), `.agentthon/artifacts/ui/ui-spec.md`, `.agentthon/artifacts/ui/design-tokens.md` (if present), relevant flows, and `contracts/` for the real shape of the data shown
+- Read: `artifacts/brief.md` (demo script), `artifacts/ui/ui-spec.md`, `artifacts/ui/design-tokens.md` (if present), relevant flows, and `contracts/` + `contracts/examples/` (agent home) for the real shape of the data shown — use the examples as wireframe data
 
-Output goes to `.agentthon/artifacts/ui/wireframes/`.
+Output goes to `artifacts/ui/wireframes/`.
 
 ## Fidelity levels
 

@@ -1,0 +1,5 @@
+# ownership.yml — GENERATED from chunks.json by chunks.py (edit chunks.json, then run chunks.py <project> ownership).
+# Paths are relative to the product repo. Most specific match wins.
+# owner: agents | architect | @github-handle   (agents = built by the Foreman's workers)
+
+areas: []

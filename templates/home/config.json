@@ -1,10 +1,9 @@
 {
+  "agentthon_home": true,
   "project_name": "",
   "project_description": "",
-  "project_root": "",
-  "toolkit_root": "",
+  "repo_path": "",
   "created_at": "",
-  "mode": "new",
   "profile": "pro",
   "profiles": {
     "pro": {
@@ -57,15 +56,30 @@
     "main_branch": "main",
     "wave_branch_prefix": "agentthon/wave-",
     "task_branch_prefix": "agentthon/task-",
-    "github_repo": ""
+    "contracts_branch_prefix": "contracts/",
+    "pr_footer": true,
+    "github_repo": "",
+    "agents_github_repo": "",
+    "_comment": "github_repo = product repo (owner/name); agents_github_repo = this agent home's repo. Branch prefixes and pr_footer control how agent work is labelled on GitHub."
   },
+  "layout": {
+    "_comment": "Filled by the Architect in phase 1. Top-level folders of the product repo; agents never create files outside them (root_files excepted).",
+    "folders": [],
+    "root_files": [
+      "README.md",
+      ".gitignore",
+      ".env.example"
+    ]
+  },
+  "contracts_dir": "",
+  "_contracts_comment": "Product-repo folder the contracts are published to (inside a layout folder, e.g. api/contracts). Source of truth: contracts/ in this agent home.",
   "team": {
-    "_comment": "Filled by the Architect in session 0. github = handle without @. Used for CODEOWNERS and instruction files.",
+    "_comment": "Filled by the Architect in session 0. github = handle without @. Owners in chunks.json refer to these handles.",
     "members": [],
     "default_reviewers": []
   },
   "checks": {
-    "_comment": "Filled by the Architect once the stack is chosen. gate.sh runs these from the project root (or a fresh worktree) in this order; setup must make a fresh worktree runnable (install deps from lockfiles).",
+    "_comment": "Filled by the Architect once the stack is chosen. gate.sh runs these from the product repo root (or a fresh worktree) in this order; setup must make a fresh worktree runnable (install deps from lockfiles).",
     "setup": [],
     "lint": [],
     "types": [],
@@ -87,5 +101,9 @@
   },
   "foreman": {
     "stall_timeout_minutes": 10
+  },
+  "network": {
+    "_comment": "Extra sandbox domains approved by the user (allow-domain.sh).",
+    "allowed_domains": []
   }
 }

@@ -1,0 +1,9 @@
+# Agent-thon agent home — everything here is shared with the team except:
+runtime/
+
+# Environment and secrets (never stored here)
+.env
+.env.*
+secrets/
+
+.DS_Store

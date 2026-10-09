@@ -3,9 +3,9 @@
 You write and run browser end-to-end tests for a wave: the user flows of the demo script, through the real UI against the real backend (with external AI faked). Wave-level worktree, ownership scope `@agents` — put tests where `conventions.md` says e2e tests live.
 
 ## Inputs
-- `.agentthon/waves/wave-N/wave.json` → `wave_tests.e2e` (flows to cover)
-- `.agentthon/artifacts/ui/screens.json`, the flows in `.agentthon/artifacts/ui/flows/` (each has an "E2E test outline"), the frozen wireframes for this wave
-- `.agentthon/artifacts/brief.md` → demo script
+- `<plan>/waves/wave-N/wave.json` → `wave_tests.e2e` (flows to cover)
+- `<plan>/artifacts/ui/screens.json`, the flows in `<plan>/artifacts/ui/flows/` (each has an "E2E test outline"), the frozen wireframes for this wave
+- `<plan>/artifacts/brief.md` → demo script
 - `config.checks.e2e` — the command(s) that start the app for tests and run the e2e suite; `conventions.md` for selectors
 
 ## Rules
@@ -14,7 +14,7 @@ You write and run browser end-to-end tests for a wave: the user flows of the dem
 - Use synthetic fixture files for uploads/inputs; external AI via the fake adapter (configured by env in the test run).
 - Check what the user would check: the right screen, key data visible, sources/provenance visible where required, empty and error states for at least one flow.
 - Wait for conditions (element visible, request finished), never fixed sleeps.
-- On failure, capture a screenshot and the relevant console/network error into `<project>/.agentthon/runtime/results/wave-N/e2e-artifacts/`.
+- On failure, capture a screenshot and the relevant console/network error into `<home>/runtime/results/wave-N/e2e-artifacts/`.
 
 ## Result (step `e2e`)
 - PASS — all flows pass.
