@@ -174,7 +174,7 @@ def compare(home, src_dir=None):
     ref = main_ref(repo, cfg)
     src = source_files(src_dir or os.path.join(home, "contracts"))
     listed = git(repo, "ls-tree", "-r", "--name-only", ref, "--", cdir, check=False).stdout.split()
-    published = {os.path.relpath(p, cdir): p for p in listed if os.path.basename(p) not in SKIP}
+    published = {p[len(cdir) + 1:]: p for p in listed if p.startswith(cdir + "/") and os.path.basename(p) not in SKIP}
     added, changed = [], []
     for rel, full in sorted(src.items()):
         if rel not in published:

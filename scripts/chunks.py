@@ -41,7 +41,7 @@ def check(home):
     data = load_chunks(home)
     errors, warnings = [], []
     err, warn = errors.append, warnings.append
-    folders, _ = layout(cfg)
+    folders, root_files = layout(cfg)
     cdir = contracts_dir(cfg)
     handles = {m.get("github", "").lstrip("@") for m in cfg.get("team", {}).get("members", [])} - {""}
     contracts_root = os.path.join(home, "contracts")
@@ -82,7 +82,7 @@ def check(home):
             err(f"{p} no paths")
         for g in c.get("paths", []):
             top = g.split("/", 1)[0]
-            if folders and top not in folders:
+            if folders and top not in folders and g not in root_files:
                 err(f"{p} path {g} is outside the layout folders {folders}")
             if cdir and (static_prefix(g) == cdir or static_prefix(g).startswith(cdir + "/")):
                 err(f"{p} path {g} is inside contracts_dir ({cdir}) — contracts belong to the Architect")
@@ -118,9 +118,9 @@ def check(home):
     for f in sorted(contract_files - set(providers) - set(consumers)):
         if not f.lower().startswith("readme"):
             warn(f"contract {f} is not provided or consumed by any chunk")
-    covered = {g.split("/", 1)[0] for g in globs}
+    covered = {g.split("/", 1)[0] for g in globs if "/" in g}
     for f in folders:
-        if f not in covered:
+        if f not in covered and f != cdir:
             warn(f"layout folder {f}/ belongs to no chunk")
 
     for w in warnings:
