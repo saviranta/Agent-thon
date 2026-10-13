@@ -60,7 +60,7 @@ Clone both repos side by side (folder names as printed by `github-setup.sh`). Ea
 | | pro | max |
 |---|---|---|
 | Interactive / Foreman models | sonnet / sonnet | opus / opus |
-| Parallel workers | 1 | 3 |
+| Parallel workers | 1 | 5 |
 | LLM review | combined, per wave | separate, per task |
 
 ```bash

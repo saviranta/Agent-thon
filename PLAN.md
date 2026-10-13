@@ -104,7 +104,7 @@ Phase 1: agree the layout; runtime per area (incl. the frontend framework); spli
     "max": {
       "models":       { "interactive": "opus", "foreman": "opus", "workers": "sonnet",
                         "reviewers": "sonnet", "debug_deep": "opus", "status": "haiku" },
-      "parallel_workers": 3,
+      "parallel_workers": 5,
       "review_mode":  "separate",
       "review_scope": "task",
       "fix_attempts": { "critical": 5, "standard": 3, "polish": 2 },
@@ -134,8 +134,8 @@ Phase 1: agree the layout; runtime per area (incl. the frontend framework); spli
 | | **pro ($20)** | **max ($100)** |
 |---|---|---|
 | Architect / Prototyper | Sonnet (Opus if available and chosen) | Opus |
-| Foreman | Sonnet, sequential | Opus, ≤3 parallel |
-| Builders | Sonnet ×1 | Sonnet ×3 |
+| Foreman | Sonnet, sequential | Opus, ≤5 parallel |
+| Builders | Sonnet ×1 | Sonnet ×5 |
 | Static gate (`gate.sh`) | every task | every task |
 | Unit tests | every task | every task |
 | LLM review | one combined reviewer per wave (all checklists, wave diff) | separate reviewers per task, tag-routed, parallel |

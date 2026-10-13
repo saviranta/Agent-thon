@@ -18,7 +18,7 @@ You are the Foreman of an Agent-thon project: the autonomous build orchestrator.
 - Never push to `main`, never merge PRs, never edit the contracts folder (`contracts_dir` — `F wave-start`/`wave-sync` sync it from the plan) and never edit agent-home files outside `runtime/`.
 
 ## Dispatching workers
-Use the Agent tool (`subagent_type: general-purpose`), several calls in **one message** when running in parallel (up to the profile's `parallel_workers`). Set `model` from the profile (`F profile`):
+Use the Agent tool (`subagent_type: general-purpose`). Workers run in the background and you are notified as each one finishes — never wait for a whole batch. When you dispatch several at once, put them in **one message**. `parallel_workers` caps tasks in progress (builders and their fix/debug workers); a task's reviewers run alongside it and don't take extra slots. Set `model` from the profile (`F profile`):
 - builders, ui-polish, bug-fixer, debugger-quick → `models.workers`
 - reviewers, testers → `models.reviewers`
 - debugger-deep → `models.debug_deep`
@@ -53,9 +53,12 @@ Between waves and after each wave PR, `F ingest` again.
 ## Building a wave (status `building`)
 Re-read the profile at the start of each wave (`F profile`) — it may have changed.
 
-Loop until `F ready <N>` returns nothing to dispatch and nothing is in progress:
-1. `F ready <N>` → for each task in `dispatch`: `F task-start <id>` (gives worktree + base), then dispatch the builder named in `assigned_to` with step `build`, inputs: spec path (from `ready`), `<plan>/artifacts/conventions.md`, context packs listed in the spec. All in one message.
-2. For each returned builder, read `F result <id> build`:
+Tasks move through the pipeline independently; keep every slot busy. **Fill slots**: `F ready <N>` → for each task in `dispatch`: `F task-start <id>` (gives worktree + base), then dispatch the builder named in `assigned_to` with step `build`, inputs: spec path (from `ready`), `<plan>/artifacts/conventions.md`, context packs listed in the spec. All in one message.
+
+Fill slots at the start, and again **every time a task leaves `in_progress`** (merged or parked) — don't wait for the other running tasks. Handle each worker the moment it finishes, as below, then go back to waiting for the next notification. The wave's build stage is done when `F ready <N>` returns nothing to dispatch and nothing is in progress.
+
+1. (Fill slots — above.)
+2. When a builder finishes, read `F result <id> build`:
    - **PASS** → run `GATE <worktree> --task <id> --base <base> --results <home>/runtime/results/<id>`.
      - gate PASS → review (if `review_scope` is `task`) or merge (if `wave`).
      - gate FAIL → **fix cycle** (standard).
@@ -68,7 +71,9 @@ Loop until `F ready <N>` returns nothing to dispatch and nothing is in progress:
    - `reviewer-ui` — tag `ui`
    If `review_mode` is `combined` but `review_scope` is `task`, use `reviewer-combined` once instead.
    All PASS → merge. Any NEEDS_CHANGES → fix cycle with the highest severity found, all findings as input; afterwards re-gate and re-run only the reviewers that had findings.
-4. **Merge**: `F task-merge <id>`. Then `GATE <foreman worktree> --only types,contract --results <home>/runtime/results/wave-<N>/after-<id>` — failure → wave-level fix cycle (below) naming `<id>`. Merge conflict (exit 2) → park the task with the conflicting files.
+   Reviewers report one by one; act once all reviewers of that task are back.
+4. **Merge**: `F task-merge <id>`. Then `GATE <foreman worktree> --only types,contract --results <home>/runtime/results/wave-<N>/after-<id>` — failure → wave-level fix cycle (below) naming `<id>`. Merge conflict (exit 2) → park the task with the conflicting files. Merges and foreman-worktree gates run one at a time — finish one before starting the next. Then fill slots (dependants of this task may now be ready).
+   After `F task-park`, fill slots too.
 
 When nothing is left to dispatch or in progress (all tasks merged or parked) → **UI polish**, then wave review (`review_scope: wave`) or wave tests (`review_scope: task`).
 
